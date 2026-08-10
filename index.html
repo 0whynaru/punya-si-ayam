@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hutan Kristal — Petualangan Dunia Terbuka</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+  :root{
+    --bg-dark:#071410;
+    --panel: rgba(8,28,22,0.86);
+    --panel-border: rgba(55,232,201,0.35);
+    --accent-cyan:#37e8c9;
+    --accent-cyan-dim:#1c8f7c;
+    --accent-amber:#ffb457;
+    --accent-red:#ff5c5c;
+    --text-light:#d7f5ec;
+    --text-dim:#7fa89c;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html,body{ width:100%; height:100%; overflow:hidden; background:var(--bg-dark); font-family:'Rajdhani',sans-serif; color:var(--text-light); }
+  #game{ position:fixed; inset:0; display:block; }
+
+  .hidden{ display:none !important; }
+
+  /* ---------- Overlays (menu / pause / win) ---------- */
+  .overlay{
+    position:fixed; inset:0; z-index:20;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    background: radial-gradient(ellipse at center, rgba(10,40,32,0.92) 0%, rgba(3,12,9,0.97) 75%);
+    text-align:center; padding:24px;
+  }
+  .eyebrow{
+    font-size:13px; letter-spacing:6px; text-transform:uppercase;
+    color: var(--accent-cyan); opacity:0.85; margin-bottom:14px; font-weight:600;
+  }
+  .title-main{
+    font-family:'Cinzel', serif; font-weight:700;
+    font-size: clamp(38px, 7vw, 74px);
+    color: var(--text-light);
+    text-shadow: 0 0 24px rgba(55,232,201,0.45), 0 0 4px rgba(0,0,0,0.6);
+    letter-spacing: 2px;
+    margin-bottom: 10px;
+  }
+  .title-main span{ color:var(--accent-cyan); }
+  .subtitle{ font-size:18px; color:var(--text-dim); margin-bottom:36px; font-weight:500; letter-spacing:1px;}
+
+  .rules{
+    display:grid; grid-template-columns: repeat(3, minmax(150px,180px)); gap:14px;
+    margin-bottom:38px;
+  }
+  .rule{
+    background: var(--panel); border:1px solid var(--panel-border); border-radius:10px;
+    padding:14px 10px; font-size:15px;
+  }
+  .rule b{ display:block; color:var(--accent-cyan); font-size:20px; margin-bottom:4px; font-family:'Cinzel',serif; }
+
+  .btn{
+    font-family:'Rajdhani',sans-serif; font-weight:700; letter-spacing:3px; text-transform:uppercase;
+    font-size:17px; color:#04231c; background: linear-gradient(180deg, var(--accent-cyan), var(--accent-cyan-dim));
+    border:none; border-radius:8px; padding:16px 46px; cursor:pointer;
+    box-shadow: 0 0 30px rgba(55,232,201,0.35), inset 0 -3px 0 rgba(0,0,0,0.25);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+  .btn:hover{ transform:translateY(-2px); box-shadow: 0 0 40px rgba(55,232,201,0.55), inset 0 -3px 0 rgba(0,0,0,0.25); }
+  .btn:active{ transform:translateY(1px); }
+  .btn.secondary{
+    background:transparent; color:var(--text-light); border:1px solid var(--panel-border); box-shadow:none; margin-top:14px;
+  }
+  .btn.secondary:hover{ border-color:var(--accent-cyan); color:var(--accent-cyan); }
+
+  .win-icon{ font-size:52px; margin-bottom:18px; }
+
+  /* ---------- HUD ---------- */
+  #hud{ position:fixed; inset:0; z-index:10; pointer-events:none; font-family:'Rajdhani',sans-serif; }
+
+  #crosshair{
+    position:absolute; top:50%; left:50%; width:22px; height:22px; transform:translate(-50%,-50%);
+  }
+  #crosshair::before, #crosshair::after{
+    content:''; position:absolute; background:var(--accent-cyan); opacity:0.85;
+  }
+  #crosshair::before{ top:50%; left:0; width:100%; height:2px; transform:translateY(-50%); }
+  #crosshair::after{ left:50%; top:0; height:100%; width:2px; transform:translateX(-50%); }
+
+  #missionPanel{
+    position:absolute; top:22px; left:22px; width:290px;
+    background:var(--panel); border:1px solid var(--panel-border); border-radius:12px;
+    padding:16px 18px; backdrop-filter: blur(4px);
+  }
+  #missionPanel h3{
+    font-family:'Cinzel',serif; font-size:15px; letter-spacing:2px; color:var(--accent-cyan);
+    text-transform:uppercase; margin-bottom:12px; border-bottom:1px solid var(--panel-border); padding-bottom:8px;
+  }
+  .mission-item{ margin-bottom:12px; }
+  .mission-item:last-child{ margin-bottom:0; }
+  .mission-name{ font-size:15px; font-weight:600; display:flex; justify-content:space-between; }
+  .mission-name .count{ color:var(--accent-amber); font-weight:700; }
+  .mission-item.done .mission-name{ color:var(--accent-cyan); text-decoration: line-through; opacity:0.65; }
+  .bar-track{ height:6px; border-radius:4px; background:rgba(255,255,255,0.08); margin-top:5px; overflow:hidden; }
+  .bar-fill{ height:100%; background:linear-gradient(90deg, var(--accent-cyan-dim), var(--accent-cyan)); width:0%; transition:width 0.3s ease; }
+
+  #minimapWrap{
+    position:absolute; top:22px; right:22px; width:150px; height:150px;
+    border-radius:50%; border:2px solid var(--panel-border); overflow:hidden;
+    background:rgba(8,28,22,0.75); box-shadow:0 0 20px rgba(0,0,0,0.4);
+  }
+
+  #healthWrap{
+    position:absolute; bottom:26px; left:22px; width:260px;
+  }
+  #healthWrap .label{ font-size:13px; letter-spacing:2px; text-transform:uppercase; color:var(--text-dim); margin-bottom:5px; }
+  #healthTrack{ height:14px; border-radius:7px; background:rgba(255,255,255,0.08); border:1px solid var(--panel-border); overflow:hidden; }
+  #healthFill{ height:100%; width:100%; background:linear-gradient(90deg,#ff5c5c,#ffb457); transition:width 0.25s ease; }
+
+  #hint{
+    position:absolute; bottom:26px; right:22px; font-size:14px; color:var(--text-dim);
+    background:var(--panel); border:1px solid var(--panel-border); border-radius:8px; padding:8px 14px;
+  }
+
+  #toastWrap{
+    position:absolute; bottom:100px; left:50%; transform:translateX(-50%);
+    display:flex; flex-direction:column; align-items:center; gap:8px; width:min(90vw,520px);
+  }
+  .toast{
+    background:var(--panel); border:1px solid var(--accent-cyan); border-radius:8px;
+    padding:10px 20px; font-size:16px; font-weight:600; color:var(--text-light);
+    animation: toastIn 0.25s ease, toastOut 0.4s ease 2.6s forwards;
+    text-align:center;
+  }
+  @keyframes toastIn{ from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:translateY(0);} }
+  @keyframes toastOut{ to{opacity:0; transform:translateY(-10px);} }
+
+  #vignette{
+    position:absolute; inset:0; pointer-events:none;
+    box-shadow: inset 0 0 0 0 rgba(255,0,0,0);
+    transition: box-shadow 0.2s ease;
+  }
+  #vignette.hit{ box-shadow: inset 0 0 160px 40px rgba(255,50,50,0.55); }
+
+  #loading{
+    position:fixed; inset:0; z-index:30; display:flex; align-items:center; justify-content:center;
+    background:var(--bg-dark); color:var(--accent-cyan); font-family:'Cinzel',serif; letter-spacing:3px; font-size:20px;
+  }
+</style>
+</head>
+<body>
+
+<div id="loading">MEMUAT DUNIA...</div>
+
+<canvas id="game"></canvas>
+
+<!-- MAIN MENU -->
+<div id="menu" class="overlay hidden">
+  <div class="eyebrow">Petualangan Orang Pertama · Dunia Terbuka</div>
+  <div class="title-main">HUTAN <span>KRISTAL</span></div>
+  <div class="subtitle">Jelajahi reruntuhan hutan purba, kumpulkan kristal, dan hadapi para penjaga batu.</div>
+  <div class="rules">
+    <div class="rule"><b>WASD</b>Bergerak</div>
+    <div class="rule"><b>Mouse</b>Lihat sekeliling</div>
+    <div class="rule"><b>Klik Kiri</b>Serang</div>
+    <div class="rule"><b>Spasi</b>Lompat</div>
+    <div class="rule"><b>Shift</b>Berlari</div>
+    <div class="rule"><b>Esc</b>Jeda</div>
+  </div>
+  <button class="btn" id="startBtn">Mulai Petualangan</button>
+</div>
+
+<!-- PAUSE MENU -->
+<div id="pause" class="overlay hidden">
+  <div class="eyebrow">Dijeda</div>
+  <div class="title-main" style="font-size:44px;">Ambil Napas</div>
+  <div class="subtitle" id="pauseSummary">Progres misi tersimpan.</div>
+  <button class="btn" id="resumeBtn">Lanjutkan</button>
+  <button class="btn secondary" id="restartBtn">Mulai Ulang</button>
+</div>
+
+<!-- WIN SCREEN -->
+<div id="winscreen" class="overlay hidden">
+  <div class="win-icon">💎</div>
+  <div class="eyebrow">Hutan Kristal Telah Tenang Kembali</div>
+  <div class="title-main">SEMUA MISI <span>SELESAI</span></div>
+  <div class="subtitle">Kau telah mengumpulkan seluruh kristal, menaklukkan para penjaga, dan menemukan menara purba.</div>
+  <button class="btn" id="playAgainBtn">Main Lagi</button>
+</div>
+
+<!-- HUD -->
+<div id="hud" class="hidden">
+  <div id="crosshair"></div>
+
+  <div id="missionPanel">
+    <h3>Misi Aktif</h3>
+    <div class="mission-item" id="m1">
+      <div class="mission-name"><span>Kumpulkan Kristal</span><span class="count">0/5</span></div>
+      <div class="bar-track"><div class="bar-fill" id="m1bar"></div></div>
+    </div>
+    <div class="mission-item" id="m2">
+      <div class="mission-name"><span>Kalahkan Penjaga Batu</span><span class="count">0/5</span></div>
+      <div class="bar-track"><div class="bar-fill" id="m2bar"></div></div>
+    </div>
+    <div class="mission-item" id="m3">
+      <div class="mission-name"><span>Temukan Menara Purba</span><span class="count">0/1</span></div>
+      <div class="bar-track"><div class="bar-fill" id="m3bar"></div></div>
+    </div>
+  </div>
+
+  <div id="minimapWrap"><canvas id="minimap" width="150" height="150"></canvas></div>
+
+  <div id="healthWrap">
+    <div class="label">Vitalitas</div>
+    <div id="healthTrack"><div id="healthFill"></div></div>
+  </div>
+
+  <div id="hint">Klik untuk mengunci kursor</div>
+
+  <div id="toastWrap"></div>
+  <div id="vignette"></div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  // ============================================================
+  // SETUP
+  // ============================================================
+  const canvas = document.getElementById('game');
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias:true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+  renderer.setSize(window.innerWidth, window.innerHeight);
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 500);
+  camera.rotation.order = 'YXZ';
+
+  // sky gradient
+  function makeSkyTexture(){
+    const c = document.createElement('canvas'); c.width=4; c.height=512;
+    const ctx = c.getContext('2d');
+    const g = ctx.createLinearGradient(0,0,0,512);
+    g.addColorStop(0,'#08211c');
+    g.addColorStop(0.55,'#123f38');
+    g.addColorStop(1,'#2c6e5f');
+    ctx.fillStyle = g; ctx.fillRect(0,0,4,512);
+    return new THREE.CanvasTexture(c);
+  }
+  scene.background = makeSkyTexture();
+  scene.fog = new THREE.Fog(0x1f5c4f, 35, 170);
+
+  // lights
+  const ambient = new THREE.AmbientLight(0x8fd6c4, 0.55);
+  scene.add(ambient);
+  const sun = new THREE.DirectionalLight(0xfff2d0, 0.9);
+  sun.position.set(60, 90, 40);
+  scene.add(sun);
+  const fillLight = new THREE.HemisphereLight(0x2c6e5f, 0x0a1a14, 0.5);
+  scene.add(fillLight);
+
+  // ground
+  const groundSize = 260;
+  const groundGeo = new THREE.PlaneGeometry(groundSize, groundSize, 40, 40);
+  groundGeo.rotateX(-Math.PI/2);
+  // subtle height noise
+  const posAttr = groundGeo.attributes.position;
+  for(let i=0;i<posAttr.count;i++){
+    const x = posAttr.getX(i), z = posAttr.getZ(i);
+    const h = Math.sin(x*0.05)*0.6 + Math.cos(z*0.06)*0.6;
+    posAttr.setY(i, h);
+  }
+  groundGeo.computeVertexNormals();
+  const groundMat = new THREE.MeshStandardMaterial({ color:0x1c4a3c, roughness:1, metalness:0 });
+  const ground = new THREE.Mesh(groundGeo, groundMat);
+  ground.receiveShadow = false;
+  scene.add(ground);
+
+  function groundHeightAt(x,z){
+    return Math.sin(x*0.05)*0.6 + Math.cos(z*0.06)*0.6;
+  }
+
+  // ============================================================
+  // WORLD OBJECTS
+  // ============================================================
+  const obstacles = []; // {x,z,r}
+  const BOUND = 118;
+
+  function rand(min,max){ return Math.random()*(max-min)+min; }
+
+  function addTree(x,z){
+    const group = new THREE.Group();
+    const trunkMat = new THREE.MeshStandardMaterial({ color:0x4a3626, roughness:0.9 });
+    const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.35,0.5,3.2,7), trunkMat);
+    trunk.position.y = 1.6;
+    group.add(trunk);
+    const foliageMat = new THREE.MeshStandardMaterial({ color:0x1f6e52, roughness:0.85, emissive:0x083026, emissiveIntensity:0.25 });
+    for(let i=0;i<3;i++){
+      const cone = new THREE.Mesh(new THREE.ConeGeometry(2.2 - i*0.5, 2.6, 8), foliageMat);
+      cone.position.y = 3.2 + i*1.6;
+      group.add(cone);
+    }
+    const y = groundHeightAt(x,z);
+    group.position.set(x, y, z);
+    scene.add(group);
+    obstacles.push({x,z,r:0.9});
+  }
+
+  function addRock(x,z){
+    const mat = new THREE.MeshStandardMaterial({ color:0x5b6b63, roughness:1 });
+    const scale = rand(0.8,1.8);
+    const rock = new THREE.Mesh(new THREE.DodecahedronGeometry(scale,0), mat);
+    const y = groundHeightAt(x,z);
+    rock.position.set(x, y+scale*0.35, z);
+    rock.rotation.set(rand(0,Math.PI), rand(0,Math.PI), rand(0,Math.PI));
+    scene.add(rock);
+    obstacles.push({x,z,r:scale*0.9});
+  }
+
+  function farFromCenter(x,z,min){ return Math.sqrt(x*x+z*z) > min; }
+
+  // scatter trees & rocks, avoid spawn area
+  for(let i=0;i<70;i++){
+    let x,z;
+    do{ x = rand(-BOUND,BOUND); z = rand(-BOUND,BOUND); } while(!farFromCenter(x,z,10));
+    addTree(x,z);
+  }
+  for(let i=0;i<35;i++){
+    let x,z;
+    do{ x = rand(-BOUND,BOUND); z = rand(-BOUND,BOUND); } while(!farFromCenter(x,z,8));
+    addRock(x,z);
+  }
+
+  // ---------------- Crystals (Mission 1) ----------------
+  const crystalPositions = [
+    {x: 30, z: 18}, {x: -40, z: 25}, {x: 15, z: -55},
+    {x: -60, z: -30}, {x: 70, z: 60}
+  ];
+  const crystals = [];
+  const crystalMat = new THREE.MeshStandardMaterial({ color:0x37e8c9, emissive:0x37e8c9, emissiveIntensity:1.2, roughness:0.2, metalness:0.3 });
+  crystalPositions.forEach(p=>{
+    const mesh = new THREE.Mesh(new THREE.OctahedronGeometry(1.1,0), crystalMat);
+    const y = groundHeightAt(p.x,p.z) + 1.6;
+    mesh.position.set(p.x, y, p.z);
+    const light = new THREE.PointLight(0x37e8c9, 1.2, 8);
+    mesh.add(light);
+    scene.add(mesh);
+    crystals.push({ mesh, x:p.x, z:p.z, baseY:y, alive:true });
+  });
+
+  // ---------------- Guardian drones (Mission 2) ----------------
+  const dronePositions = [
+    {x: -20, z: -15}, {x: 45, z: -25}, {x: -55, z: 10},
+    {x: 20, z: 60}, {x: -15, z: 80}
+  ];
+  const drones = [];
+  const droneMat = new THREE.MeshStandardMaterial({ color:0x3a1414, emissive:0xff5c5c, emissiveIntensity:0.9, roughness:0.4 });
+  dronePositions.forEach(p=>{
+    const group = new THREE.Group();
+    const core = new THREE.Mesh(new THREE.IcosahedronGeometry(1.1,0), droneMat);
+    group.add(core);
+    const ringMat = new THREE.MeshStandardMaterial({ color:0x220a0a, emissive:0xff5c5c, emissiveIntensity:0.4 });
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(1.6,0.08,8,24), ringMat);
+    ring.rotation.x = Math.PI/2.3;
+    group.add(ring);
+    const y = groundHeightAt(p.x,p.z) + 2.2;
+    group.position.set(p.x, y, p.z);
+    scene.add(group);
+    drones.push({ group, x:p.x, z:p.z, baseY:y, alive:true, lastDamage:0 });
+  });
+
+  // ---------------- Ancient tower (Mission 3) ----------------
+  const towerPos = {x: 95, z: 95};
+  (function buildTower(){
+    const group = new THREE.Group();
+    const stoneMat = new THREE.MeshStandardMaterial({ color:0x555f5a, roughness:0.9 });
+    const base = new THREE.Mesh(new THREE.CylinderGeometry(4.2,5,4,10), stoneMat);
+    base.position.y = 2;
+    group.add(base);
+    const shaft = new THREE.Mesh(new THREE.CylinderGeometry(3,3.4,32,10), stoneMat);
+    shaft.position.y = 4 + 16;
+    group.add(shaft);
+    const orbMat = new THREE.MeshStandardMaterial({ color:0x37e8c9, emissive:0x37e8c9, emissiveIntensity:1.5 });
+    const orb = new THREE.Mesh(new THREE.SphereGeometry(2,16,16), orbMat);
+    orb.position.y = 4 + 32 + 2;
+    group.add(orb);
+    const orbLight = new THREE.PointLight(0x37e8c9, 2, 40);
+    orbLight.position.copy(orb.position);
+    group.add(orbLight);
+    const y = groundHeightAt(towerPos.x, towerPos.z);
+    group.position.set(towerPos.x, y, towerPos.z);
+    scene.add(group);
+    obstacles.push({x:towerPos.x, z:towerPos.z, r:5.2});
+  })();
+
+  // ============================================================
+  // MISSIONS STATE
+  // ============================================================
+  const missions = {
+    m1: { done:false, progress:0, total:5 },
+    m2: { done:false, progress:0, total:5 },
+    m3: { done:false, progress:0, total:1 },
+  };
+
+  function updateMissionUI(){
+    ['m1','m2','m3'].forEach(id=>{
+      const m = missions[id];
+      const el = document.getElementById(id);
+      const bar = document.getElementById(id+'bar');
+      const countSpan = el.querySelector('.count');
+      countSpan.textContent = m.progress + '/' + m.total;
+      bar.style.width = Math.min(100, (m.progress/m.total)*100) + '%';
+      el.classList.toggle('done', m.done);
+    });
+    if(missions.m1.done && missions.m2.done && missions.m3.done && !allDoneShown){
+      allDoneShown = true;
+      setTimeout(showWinScreen, 600);
+    }
+  }
+  let allDoneShown = false;
+
+  function toast(msg){
+    const wrap = document.getElementById('toastWrap');
+    const t = document.createElement('div');
+    t.className = 'toast';
+    t.textContent = msg;
+    wrap.appendChild(t);
+    setTimeout(()=> t.remove(), 3200);
+  }
+
+  // ============================================================
+  // AUDIO (simple synth beeps, no external assets)
+  // ============================================================
+  let actx = null;
+  function ensureAudio(){ if(!actx){ try{ actx = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } }
+  function beep(freq, dur, type, gain){
+    if(!actx) return;
+    const osc = actx.createOscillator();
+    const g = actx.createGain();
+    osc.type = type || 'sine';
+    osc.frequency.value = freq;
+    g.gain.value = gain || 0.15;
+    osc.connect(g); g.connect(actx.destination);
+    osc.start();
+    g.gain.exponentialRampToValueAtTime(0.0001, actx.currentTime + dur);
+    osc.stop(actx.currentTime + dur);
+  }
+  function sfxCollect(){ beep(880,0.15,'sine',0.18); setTimeout(()=>beep(1320,0.18,'sine',0.14),90); }
+  function sfxShootHit(){ beep(180,0.12,'square',0.16); }
+  function sfxDamage(){ beep(120,0.2,'sawtooth',0.18); }
+  function sfxComplete(){ beep(660,0.15,'sine',0.16); setTimeout(()=>beep(880,0.15,'sine',0.16),120); setTimeout(()=>beep(1320,0.25,'sine',0.16),240); }
+
+  // ============================================================
+  // PLAYER
+  // ============================================================
+  const player = {
+    x: 0, z: 8, y: 0, vy: 0, grounded:true,
+    yaw: Math.PI, pitch: 0,
+    health: 100, radius: 0.6, eyeHeight: 1.7,
+    speed: 6.2, runSpeed: 10.5,
+  };
+  const spawn = { x:0, z:8 };
+
+  const keys = {};
+  document.addEventListener('keydown', e=>{ keys[e.code]=true; });
+  document.addEventListener('keyup', e=>{ keys[e.code]=false; });
+
+  let pointerLocked = false;
+  const MOUSE_SENS = 0.0022;
+
+  document.addEventListener('mousemove', e=>{
+    if(!pointerLocked) return;
+    player.yaw -= e.movementX * MOUSE_SENS;
+    player.pitch -= e.movementY * MOUSE_SENS;
+    const lim = Math.PI/2 - 0.05;
+    player.pitch = Math.max(-lim, Math.min(lim, player.pitch));
+  });
+
+  function requestLock(){ canvas.requestPointerLock(); }
+
+  document.addEventListener('pointerlockchange', ()=>{
+    pointerLocked = (document.pointerLockElement === canvas);
+    const hint = document.getElementById('hint');
+    if(pointerLocked){
+      hint.classList.add('hidden');
+      if(gameStarted && paused) resumeGame();
+    } else {
+      hint.classList.remove('hidden');
+      if(gameStarted && !paused && !winShown) pauseGame();
+    }
+  });
+
+  canvas.addEventListener('click', ()=>{
+    if(!gameStarted || paused || winShown) return;
+    if(!pointerLocked){ requestLock(); return; }
+    shoot();
+  });
+
+  // ============================================================
+  // SHOOTING
+  // ============================================================
+  const raycaster = new THREE.Raycaster();
+  function shoot(){
+    ensureAudio();
+    raycaster.setFromCamera({x:0,y:0}, camera);
+    let closest = null; let closestDist = Infinity;
+    drones.forEach(d=>{
+      if(!d.alive) return;
+      const dist = raycaster.ray.distanceToPoint(d.group.position);
+      if(dist < 1.6){
+        const camDist = camera.position.distanceTo(d.group.position);
+        if(camDist < closestDist){ closestDist = camDist; closest = d; }
+      }
+    });
+    if(closest && closestDist < 70){
+      killDrone(closest);
+    }
+  }
+
+  function killDrone(d){
+    d.alive = false;
+    scene.remove(d.group);
+    sfxShootHit();
+    missions.m2.progress++;
+    if(missions.m2.progress >= missions.m2.total){ missions.m2.done = true; toast('Misi selesai: Kalahkan Penjaga Batu'); sfxComplete(); }
+    else toast('Penjaga batu dikalahkan (' + missions.m2.progress + '/' + missions.m2.total + ')');
+    updateMissionUI();
+  }
+
+  // ============================================================
+  // COLLISION HELPERS
+  // ============================================================
+  function tryMove(nx, nz){
+    for(const o of obstacles){
+      const dx = nx-o.x, dz = nz-o.z;
+      const distSq = dx*dx+dz*dz;
+      const minDist = o.r + player.radius;
+      if(distSq < minDist*minDist) return false;
+    }
+    return true;
+  }
+
+  // ============================================================
+  // GAME LOOP
+  // ============================================================
+  let gameStarted = false, paused = false, winShown = false;
+  const clock = new THREE.Clock();
+
+  function updatePlayer(dt){
+    const forward = new THREE.Vector3(Math.sin(player.yaw), 0, Math.cos(player.yaw));
+    const right = new THREE.Vector3(Math.sin(player.yaw+Math.PI/2), 0, Math.cos(player.yaw+Math.PI/2));
+
+    let moveX = 0, moveZ = 0;
+    if(keys['KeyW']){ moveX -= forward.x; moveZ -= forward.z; }
+    if(keys['KeyS']){ moveX += forward.x; moveZ += forward.z; }
+    if(keys['KeyA']){ moveX -= right.x; moveZ -= right.z; }
+    if(keys['KeyD']){ moveX += right.x; moveZ += right.z; }
+
+    const len = Math.hypot(moveX, moveZ);
+    if(len > 0){ moveX/=len; moveZ/=len; }
+
+    const spd = (keys['ShiftLeft']||keys['ShiftRight']) ? player.runSpeed : player.speed;
+    const dx = moveX * spd * dt;
+    const dz = moveZ * spd * dt;
+
+    const nx = player.x + dx;
+    const nz = player.z + dz;
+
+    if(tryMove(nx, player.z)) player.x = Math.max(-BOUND, Math.min(BOUND, nx));
+    if(tryMove(player.x, nz)) player.z = Math.max(-BOUND, Math.min(BOUND, nz));
+
+    // jump / gravity
+    const groundY = groundHeightAt(player.x, player.z);
+    if(keys['Space'] && player.grounded){
+      player.vy = 6.2;
+      player.grounded = false;
+    }
+    player.vy -= 15.5 * dt;
+    player.y += player.vy * dt;
+    if(player.y <= groundY){
+      player.y = groundY;
+      player.vy = 0;
+      player.grounded = true;
+    }
+
+    camera.position.set(player.x, player.y + player.eyeHeight, player.z);
+    camera.rotation.y = player.yaw;
+    camera.rotation.x = player.pitch;
+  }
+
+  function updateWorldObjects(t){
+    crystals.forEach(c=>{
+      if(!c.alive) return;
+      c.mesh.rotation.y += 0.02;
+      c.mesh.position.y = c.baseY + Math.sin(t*1.6 + c.x)*0.25;
+      const dx = player.x-c.x, dz = player.z-c.z;
+      if(Math.hypot(dx,dz) < 2.6){
+        c.alive = false;
+        scene.remove(c.mesh);
+        sfxCollect();
+        missions.m1.progress++;
+        if(missions.m1.progress >= missions.m1.total){ missions.m1.done = true; toast('Misi selesai: Kumpulkan Kristal'); sfxComplete(); }
+        else toast('Kristal ditemukan (' + missions.m1.progress + '/' + missions.m1.total + ')');
+        updateMissionUI();
+      }
+    });
+
+    drones.forEach(d=>{
+      if(!d.alive) return;
+      d.group.rotation.y += 0.015;
+      d.group.position.y = d.baseY + Math.sin(t*1.2 + d.x)*0.3;
+      const dx = player.x-d.x, dz = player.z-d.z;
+      const dist = Math.hypot(dx,dz);
+      if(dist < 4.2){
+        if(t - d.lastDamage > 0.7){
+          d.lastDamage = t;
+          player.health = Math.max(0, player.health - 6);
+          sfxDamage();
+          flashVignette();
+          updateHealthUI();
+          if(player.health <= 0) respawnPlayer();
+        }
+      }
+    });
+
+    if(!missions.m3.done){
+      const dx = player.x-towerPos.x, dz = player.z-towerPos.z;
+      if(Math.hypot(dx,dz) < 8){
+        missions.m3.progress = 1;
+        missions.m3.done = true;
+        toast('Misi selesai: Temukan Menara Purba');
+        sfxComplete();
+        updateMissionUI();
+      }
+    }
+
+    // slow regen
+    if(player.health < 100){
+      player.health = Math.min(100, player.health + 3*dtGlobal);
+      updateHealthUI();
+    }
+  }
+
+  let dtGlobal = 0;
+  let lastDamageFlash = 0;
+  function flashVignette(){
+    const v = document.getElementById('vignette');
+    v.classList.add('hit');
+    lastDamageFlash = performance.now();
+    setTimeout(()=>{
+      if(performance.now() - lastDamageFlash >= 190) v.classList.remove('hit');
+    }, 200);
+  }
+
+  function respawnPlayer(){
+    player.x = spawn.x; player.z = spawn.z; player.y = groundHeightAt(spawn.x,spawn.z);
+    player.health = 60;
+    toast('Kesadaranmu goyah... kembali ke titik awal');
+    updateHealthUI();
+  }
+
+  function updateHealthUI(){
+    document.getElementById('healthFill').style.width = player.health + '%';
+  }
+
+  // ---------------- Minimap ----------------
+  const mmCanvas = document.getElementById('minimap');
+  const mmCtx = mmCanvas.getContext('2d');
+  const MM_SCALE = 150 / (BOUND*2.1);
+  function drawMinimap(){
+    mmCtx.clearRect(0,0,150,150);
+    mmCtx.fillStyle = 'rgba(28,74,60,0.4)';
+    mmCtx.beginPath(); mmCtx.arc(75,75,74,0,Math.PI*2); mmCtx.fill();
+
+    function toMM(x,z){
+      return { mx: 75 + x*MM_SCALE, my: 75 + z*MM_SCALE };
+    }
+    // crystals
+    crystals.forEach(c=>{
+      if(!c.alive) return;
+      const p = toMM(c.x,c.z);
+      mmCtx.fillStyle = '#37e8c9';
+      mmCtx.beginPath(); mmCtx.arc(p.mx,p.my,3,0,Math.PI*2); mmCtx.fill();
+    });
+    // drones
+    drones.forEach(d=>{
+      if(!d.alive) return;
+      const p = toMM(d.x,d.z);
+      mmCtx.fillStyle = '#ff5c5c';
+      mmCtx.beginPath(); mmCtx.arc(p.mx,p.my,3,0,Math.PI*2); mmCtx.fill();
+    });
+    // tower
+    {
+      const p = toMM(towerPos.x, towerPos.z);
+      mmCtx.fillStyle = '#ffb457';
+      mmCtx.beginPath(); mmCtx.arc(p.mx,p.my,4,0,Math.PI*2); mmCtx.fill();
+    }
+    // player
+    const pp = toMM(player.x, player.z);
+    mmCtx.save();
+    mmCtx.translate(pp.mx, pp.my);
+    mmCtx.rotate(player.yaw);
+    mmCtx.fillStyle = '#ffffff';
+    mmCtx.beginPath();
+    mmCtx.moveTo(0,-6); mmCtx.lineTo(4,5); mmCtx.lineTo(-4,5); mmCtx.closePath(); mmCtx.fill();
+    mmCtx.restore();
+  }
+
+  function animate(){
+    requestAnimationFrame(animate);
+    const dt = Math.min(0.05, clock.getDelta());
+    dtGlobal = dt;
+    if(gameStarted && !paused && !winShown){
+      const t = clock.elapsedTime;
+      updatePlayer(dt);
+      updateWorldObjects(t);
+      drawMinimap();
+    }
+    renderer.render(scene, camera);
+  }
+
+  window.addEventListener('resize', ()=>{
+    camera.aspect = window.innerWidth/window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  });
+
+  // ============================================================
+  // MENU / PAUSE / WIN FLOW
+  // ============================================================
+  const menuEl = document.getElementById('menu');
+  const pauseEl = document.getElementById('pause');
+  const winEl = document.getElementById('winscreen');
+  const hudEl = document.getElementById('hud');
+
+  document.getElementById('startBtn').addEventListener('click', ()=>{
+    ensureAudio();
+    menuEl.classList.add('hidden');
+    hudEl.classList.remove('hidden');
+    gameStarted = true; paused = false;
+    player.x = spawn.x; player.z = spawn.z; player.y = groundHeightAt(spawn.x,spawn.z);
+    updateHealthUI();
+    updateMissionUI();
+    requestLock();
+  });
+
+  function pauseGame(){
+    paused = true;
+    pauseEl.classList.remove('hidden');
+    const total = missions.m1.progress+missions.m2.progress+missions.m3.progress;
+    document.getElementById('pauseSummary').textContent =
+      'Progres: ' + total + ' dari ' + (missions.m1.total+missions.m2.total+missions.m3.total) + ' tujuan tercapai.';
+  }
+  function resumeGame(){
+    paused = false;
+    pauseEl.classList.add('hidden');
+  }
+  document.getElementById('resumeBtn').addEventListener('click', ()=>{
+    requestLock();
+  });
+  document.getElementById('restartBtn').addEventListener('click', ()=>{
+    location.reload();
+  });
+
+  document.addEventListener('keydown', e=>{
+    if(e.code === 'Escape' && gameStarted && !winShown){
+      if(document.pointerLockElement === canvas){ document.exitPointerLock(); }
+      else if(!paused){ pauseGame(); }
+    }
+  });
+
+  function showWinScreen(){
+    winShown = true;
+    if(document.pointerLockElement === canvas) document.exitPointerLock();
+    winEl.classList.remove('hidden');
+  }
+  document.getElementById('playAgainBtn').addEventListener('click', ()=>{ location.reload(); });
+
+  // ============================================================
+  // BOOT
+  // ============================================================
+  document.getElementById('loading').classList.add('hidden');
+  menuEl.classList.remove('hidden');
+  animate();
+
+})();
+</script>
+</body>
+</html>
