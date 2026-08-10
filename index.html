@@ -3,23 +3,24 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ruang Waktu — Apartemen RX-7</title>
+<title>Ruang Waktu — Apartemen RX-7 (Enhanced Edition)</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tween.js/18.6.4/tween.umd.js"></script>
 <style>
   :root{
-    --bg:#15110d;
-    --glass: rgba(42,33,24,0.55);
-    --glass-strong: rgba(30,23,17,0.82);
-    --glass-border: rgba(255,255,255,0.10);
-    --sage:#8fbf7a;
-    --sage-dim:#5f8a4d;
-    --amber:#e8b96b;
-    --rose:#d98ba0;
-    --danger:#e2685f;
-    --text:#f5efe3;
-    --dim:#b7a992;
+    --bg:#0a0d14;
+    --glass: rgba(20,25,35,0.65);
+    --glass-strong: rgba(10,15,25,0.85);
+    --glass-border: rgba(255,255,255,0.15);
+    --sage:#00ffcc;
+    --sage-dim:#0088aa;
+    --amber:#ffaa00;
+    --rose:#ff3366;
+    --danger:#ff3333;
+    --text:#e0f0ff;
+    --dim:#8899aa;
   }
   *{box-sizing:border-box; margin:0; padding:0;}
   html,body{ width:100%; height:100%; overflow:hidden; background:var(--bg); font-family:'Inter',sans-serif; color:var(--text); }
@@ -27,209 +28,126 @@
   .hidden{ display:none !important; }
   .mono{ font-family:'Space Mono', monospace; }
 
-  #vignette{ position:fixed; inset:0; z-index:15; pointer-events:none; box-shadow: inset 0 0 180px 50px rgba(0,0,0,0.55); }
+  #vignette{ position:fixed; inset:0; z-index:15; pointer-events:none; box-shadow: inset 0 0 200px 80px rgba(0,0,0,0.8); }
 
   /* ---------------- Overlays ---------------- */
   .overlay{
     position:fixed; inset:0; z-index:30;
     display:flex; flex-direction:column; align-items:center; justify-content:center;
-    background: radial-gradient(ellipse at center, rgba(40,30,22,0.94) 0%, rgba(12,9,6,0.98) 80%);
+    background: radial-gradient(ellipse at center, rgba(10,15,25,0.95) 0%, rgba(2,5,10,0.98) 100%);
     text-align:center; padding:24px;
   }
-  .eyebrow{ font-family:'Poppins',sans-serif; font-size:13px; letter-spacing:4px; text-transform:uppercase; color:var(--amber); opacity:0.9; margin-bottom:14px; font-weight:600; }
+  .eyebrow{ font-family:'Poppins',sans-serif; font-size:14px; letter-spacing:5px; text-transform:uppercase; color:var(--amber); margin-bottom:14px; font-weight:700; text-shadow: 0 0 10px rgba(255,170,0,0.5); }
   .title-main{
     font-family:'Poppins', sans-serif; font-weight:800;
-    font-size: clamp(30px, 6vw, 56px); color:var(--text);
-    letter-spacing: 0.5px; margin-bottom: 12px;
+    font-size: clamp(36px, 7vw, 72px); color:var(--text);
+    letter-spacing: 2px; margin-bottom: 16px; text-shadow: 0 0 20px rgba(255,255,255,0.2);
   }
-  .title-main span{ color:var(--sage); }
-  .subtitle{ font-size:16px; color:var(--dim); margin-bottom:32px; font-weight:400; max-width:560px; line-height:1.5; }
+  .title-main span{ color:var(--sage); text-shadow: 0 0 30px rgba(0,255,204,0.6); }
+  .subtitle{ font-size:16px; color:var(--dim); margin-bottom:40px; font-weight:400; max-width:600px; line-height:1.6; }
 
-  .rules{ display:grid; grid-template-columns: repeat(3, minmax(140px,170px)); gap:12px; margin-bottom:32px; }
-  .rule{ background:var(--glass); border:1px solid var(--glass-border); border-radius:14px; padding:14px 8px; font-size:13px; backdrop-filter: blur(8px); }
-  .rule b{ display:block; color:var(--sage); font-size:17px; margin-bottom:4px; font-family:'Poppins',sans-serif; font-weight:700; }
+  .rules{ display:grid; grid-template-columns: repeat(3, minmax(140px,170px)); gap:16px; margin-bottom:40px; }
+  .rule{ background:var(--glass); border:1px solid var(--glass-border); border-radius:16px; padding:16px 10px; font-size:14px; backdrop-filter: blur(10px); }
+  .rule b{ display:block; color:var(--sage); font-size:20px; margin-bottom:6px; font-family:'Poppins',sans-serif; font-weight:700; }
 
   .btn{
-    font-family:'Poppins',sans-serif; font-weight:600; letter-spacing:0.5px; font-size:15px;
-    color:#17250f; background: linear-gradient(180deg, var(--sage), var(--sage-dim));
-    border:none; border-radius:14px; padding:15px 40px; cursor:pointer;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.35), inset 0 -2px 0 rgba(0,0,0,0.15);
-    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    font-family:'Poppins',sans-serif; font-weight:700; letter-spacing:1px; font-size:16px; text-transform:uppercase;
+    color:#001122; background: linear-gradient(135deg, var(--sage), var(--sage-dim));
+    border:none; border-radius:16px; padding:18px 48px; cursor:pointer;
+    box-shadow: 0 10px 30px rgba(0,255,204,0.3), inset 0 -3px 0 rgba(0,0,0,0.2);
+    transition: all 0.2s ease;
   }
-  .btn:hover{ transform:translateY(-2px); box-shadow: 0 10px 28px rgba(0,0,0,0.4), inset 0 -2px 0 rgba(0,0,0,0.15); }
-  .btn.secondary{ background:transparent; color:var(--text); border:1px solid var(--glass-border); box-shadow:none; margin-top:12px; }
-  .btn.secondary:hover{ border-color:var(--sage); color:var(--sage); }
+  .btn:hover{ transform:translateY(-3px) scale(1.02); box-shadow: 0 15px 40px rgba(0,255,204,0.5), inset 0 -3px 0 rgba(0,0,0,0.2); }
+  .btn.secondary{ background:transparent; color:var(--text); border:2px solid var(--glass-border); box-shadow:none; margin-top:16px; }
+  .btn.secondary:hover{ border-color:var(--sage); color:var(--sage); text-shadow: 0 0 10px var(--sage); }
 
   /* ---------------- HUD ---------------- */
   #hud{ position:fixed; inset:0; z-index:10; pointer-events:none; }
-  #crosshair{ position:absolute; top:50%; left:50%; width:16px; height:16px; transform:translate(-50%,-50%); }
-  #crosshair::before, #crosshair::after{ content:''; position:absolute; background:rgba(245,239,227,0.8); border-radius:2px; }
+  #cinematicBars{ position:fixed; inset:0; z-index:25; pointer-events:none; display:flex; flex-direction:column; justify-content:space-between; transition: opacity 1s ease; }
+  .cinematic-bar{ height:12vh; background:#000; width:100%; transition: height 1s ease; }
+  .cinematic-active .cinematic-bar{ height: 20vh; }
+  #skipCinematic{ position:absolute; bottom:30px; right:30px; color:white; z-index:35; background:rgba(0,0,0,0.5); padding:10px 20px; border-radius:8px; border:1px solid white; cursor:pointer; font-family:'Poppins'; pointer-events:auto; display:none; }
+
+  #crosshair{ position:absolute; top:50%; left:50%; width:20px; height:20px; transform:translate(-50%,-50%); opacity:0; transition: opacity 0.5s; }
+  #crosshair.visible{ opacity:1; }
+  #crosshair::before, #crosshair::after{ content:''; position:absolute; background:var(--sage); border-radius:2px; box-shadow: 0 0 5px var(--sage); }
   #crosshair::before{ top:50%; left:0; width:100%; height:2px; transform:translateY(-50%); }
   #crosshair::after{ left:50%; top:0; height:100%; width:2px; transform:translateX(-50%); }
 
   #missionPanel{
-    position:absolute; top:20px; left:20px; width:270px;
-    background:var(--glass); border:1px solid var(--glass-border); border-radius:18px; padding:16px 18px;
-    backdrop-filter: blur(10px); box-shadow:0 8px 24px rgba(0,0,0,0.25);
+    position:absolute; top:24px; left:24px; width:280px;
+    background:var(--glass); border:1px solid var(--glass-border); border-radius:20px; padding:20px;
+    backdrop-filter: blur(12px); box-shadow:0 10px 30px rgba(0,0,0,0.4);
   }
-  #missionPanel h3{ font-family:'Poppins',sans-serif; font-size:13px; letter-spacing:1.5px; color:var(--amber); text-transform:uppercase; margin-bottom:12px; font-weight:700; }
-  .mission-item{ margin-bottom:12px; } .mission-item:last-child{ margin-bottom:0; }
-  .mission-name{ font-size:14px; font-weight:600; display:flex; justify-content:space-between; font-family:'Inter',sans-serif; }
+  #missionPanel h3{ font-family:'Poppins',sans-serif; font-size:14px; letter-spacing:2px; color:var(--amber); text-transform:uppercase; margin-bottom:16px; font-weight:800; }
+  .mission-item{ margin-bottom:16px; } .mission-item:last-child{ margin-bottom:0; }
+  .mission-name{ font-size:14px; font-weight:600; display:flex; justify-content:space-between; margin-bottom:6px; }
   .mission-name .count{ color:var(--amber); font-weight:700; }
-  .mission-item.done .mission-name{ color:var(--sage); opacity:0.6; }
-  .bar-track{ height:5px; border-radius:4px; background:rgba(255,255,255,0.10); margin-top:5px; overflow:hidden; }
-  .bar-fill{ height:100%; background:linear-gradient(90deg, var(--sage-dim), var(--sage)); width:0%; transition:width 0.3s ease; }
+  .mission-item.done .mission-name{ color:var(--sage); opacity:0.8; text-shadow: 0 0 5px var(--sage); }
+  .bar-track{ height:6px; border-radius:6px; background:rgba(0,0,0,0.5); border:1px solid rgba(255,255,255,0.1); overflow:hidden; }
+  .bar-fill{ height:100%; background:linear-gradient(90deg, var(--sage-dim), var(--sage)); width:0%; transition:width 0.4s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 0 10px var(--sage); }
 
-  #radarWrap{
-    position:absolute; top:20px; right:20px; width:130px; height:130px; border-radius:50%;
-    border:1px solid var(--glass-border); overflow:hidden; background:var(--glass); box-shadow:0 8px 24px rgba(0,0,0,0.3);
-    backdrop-filter: blur(10px);
-  }
-
-  #healthWrap{ position:absolute; bottom:24px; left:20px; width:220px; }
-  #healthWrap .label{ font-size:11px; letter-spacing:1.5px; text-transform:uppercase; color:var(--dim); margin-bottom:5px; font-family:'Poppins',sans-serif; font-weight:600; }
-  #healthTrack{ height:11px; border-radius:8px; background:rgba(255,255,255,0.10); overflow:hidden; }
-  #healthFill{ height:100%; width:100%; background:linear-gradient(90deg,var(--danger),var(--amber)); transition:width 0.25s ease; }
-
-  #hint{ position:absolute; bottom:24px; left:50%; transform:translateX(-50%); font-size:13px; color:var(--dim); background:var(--glass); border:1px solid var(--glass-border); border-radius:10px; padding:8px 16px; backdrop-filter: blur(8px); }
-
-  #toolButtons{ position:absolute; bottom:24px; right:20px; display:flex; gap:10px; pointer-events:auto; }
-  .toolBtn{
-    background:var(--glass); border:1px solid var(--glass-border); border-radius:14px; color:var(--text);
-    font-family:'Inter',sans-serif; font-weight:600; font-size:12px; padding:10px 16px; cursor:pointer; text-align:center;
-    backdrop-filter: blur(8px); transition: border-color 0.15s ease;
-  }
-  .toolBtn b{ display:block; font-size:18px; margin-bottom:2px; }
-  .toolBtn:hover{ border-color:var(--sage); }
-
-  #toastWrap{ position:absolute; bottom:92px; left:50%; transform:translateX(-50%); display:flex; flex-direction:column; align-items:center; gap:8px; width:min(90vw,520px); }
+  #toastWrap{ position:absolute; bottom:100px; left:50%; transform:translateX(-50%); display:flex; flex-direction:column; align-items:center; gap:10px; width:min(90vw,600px); }
   .toast{
-    background:var(--glass-strong); border:1px solid var(--glass-border); border-left:3px solid var(--sage); border-radius:10px; padding:10px 18px; font-size:14px; font-weight:500;
-    animation: toastIn 0.25s ease, toastOut 0.4s ease 2.7s forwards; text-align:center; backdrop-filter: blur(8px);
+    background:var(--glass-strong); border:1px solid var(--glass-border); border-left:4px solid var(--sage); border-radius:12px; padding:14px 24px; font-size:15px; font-weight:500;
+    animation: toastIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), toastOut 0.5s ease 3s forwards; text-align:center; backdrop-filter: blur(10px); box-shadow: 0 5px 15px rgba(0,0,0,0.5);
   }
-  .toast.dialog{ border-left-color:var(--rose); }
+  .toast.dialog{ border-left-color:var(--amber); }
   .toast.warn{ border-left-color:var(--danger); }
-  @keyframes toastIn{ from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:translateY(0);} }
-  @keyframes toastOut{ to{opacity:0; transform:translateY(-10px);} }
+  @keyframes toastIn{ from{opacity:0; transform:translateY(20px) scale(0.9);} to{opacity:1; transform:translateY(0) scale(1);} }
+  @keyframes toastOut{ to{opacity:0; transform:translateY(-20px) scale(0.9);} }
 
-  #vignetteHit{ position:absolute; inset:0; pointer-events:none; box-shadow: inset 0 0 0 0 rgba(226,104,95,0); transition: box-shadow 0.2s ease; }
-  #vignetteHit.hit{ box-shadow: inset 0 0 140px 40px rgba(226,104,95,0.45); }
+  #vignetteHit{ position:absolute; inset:0; pointer-events:none; box-shadow: inset 0 0 0 0 rgba(255,51,51,0); transition: box-shadow 0.1s ease; }
+  #vignetteHit.hit{ box-shadow: inset 0 0 200px 50px rgba(255,51,51,0.6); }
 
-  /* ---------------- Modals ---------------- */
-  .modal{ position:fixed; inset:0; z-index:40; display:flex; align-items:center; justify-content:center; background:rgba(12,9,6,0.75); backdrop-filter: blur(4px); }
-  .modalBox{
-    background:linear-gradient(180deg, rgba(46,36,26,0.97), rgba(24,18,13,0.97));
-    border:1px solid var(--glass-border); border-radius:22px; padding:26px; width:min(92vw,340px);
-    box-shadow:0 20px 60px rgba(0,0,0,0.5);
-  }
-  .modalTitle{ font-family:'Poppins',sans-serif; font-size:16px; letter-spacing:0.5px; color:var(--text); font-weight:700; margin-bottom:16px; text-align:center; }
-  #calcScreen{
-    background:rgba(0,0,0,0.35); border:1px solid var(--glass-border); border-radius:14px; padding:16px;
-    font-family:'Space Mono',monospace; font-size:34px; color:var(--sage); text-align:right; margin-bottom:14px;
-    min-height:50px; overflow:hidden; letter-spacing:1px;
-  }
-  #calcGrid{ display:grid; grid-template-columns: repeat(4,1fr); gap:8px; }
-  .calcKey{
-    padding:15px 0; border-radius:12px; border:1px solid var(--glass-border); background:rgba(255,255,255,0.04);
-    color:var(--text); font-family:'Inter',sans-serif; font-weight:600; font-size:17px; cursor:pointer; transition: background 0.12s ease;
-  }
-  .calcKey:hover{ background:rgba(143,191,122,0.16); border-color:var(--sage); }
-  .calcKey.op{ color:var(--amber); }
-  .calcKey.eq{ background:linear-gradient(180deg, var(--sage), var(--sage-dim)); color:#17250f; grid-column: span 2; }
-  .calcKey.clear{ color:var(--danger); }
-  .modalClose{ margin-top:16px; width:100%; }
-
-  .statRow{ display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.06); font-size:14px; }
-  .statRow:last-child{ border-bottom:none; }
-  .statRow .val{ font-family:'Space Mono',monospace; font-size:16px; color:var(--amber); }
-  .statRow .val.sage{ color:var(--sage); }
-  #statModalBox{ width:min(92vw,380px); }
-
-  #loading{ position:fixed; inset:0; z-index:50; display:flex; align-items:center; justify-content:center; background:var(--bg); color:var(--sage); font-family:'Poppins',sans-serif; letter-spacing:2px; font-size:16px; }
+  #loading{ position:fixed; inset:0; z-index:50; display:flex; align-items:center; justify-content:center; background:#05070a; color:var(--sage); font-family:'Poppins',sans-serif; letter-spacing:4px; font-size:18px; font-weight:700; text-transform:uppercase; animation: pulse 1.5s infinite; }
+  @keyframes pulse { 0% { opacity: 0.5; } 50% { opacity: 1; text-shadow: 0 0 20px var(--sage); } 100% { opacity: 0.5; } }
 </style>
 </head>
 <body>
 
-<div id="loading">Menyiapkan ruangan...</div>
+<div id="loading">Menginisialisasi Simulasi...</div>
 <canvas id="game"></canvas>
 <div id="vignette"></div>
+<div id="vignetteHit"></div>
+
+<div id="cinematicBars" class="hidden cinematic-active">
+  <div class="cinematic-bar"></div>
+  <div class="cinematic-bar"></div>
+</div>
+<button id="skipCinematic">Lewati Sinematik</button>
 
 <!-- MAIN MENU -->
 <div id="menu" class="overlay hidden">
-  <div class="eyebrow">Petualangan Sci-Fi Orang Pertama</div>
-  <div class="title-main">RUANG <span>WAKTU</span></div>
-  <div class="subtitle">Apartemen RX-7 tampak biasa saja dari luar. Tapi di ruang belakang, sebuah perangkat percobaan sedang bocor — anomali kecil bermunculan di seluruh ruangan. Kumpulkan komponen, redakan anomalinya, lalu nyalakan kembali perangkatnya.</div>
+  <div class="eyebrow">Simulasi Cuaca & Anomali</div>
+  <div class="title-main">RUANG <span>WAKTU</span>: APEX</div>
+  <div class="subtitle">Badai petir mengamuk di luar Apartemen RX-7. Perangkat eksperimental bereaksi terhadap cuaca, menciptakan distorsi realitas. Netralisir anomali sebelum inti reaktor kelebihan beban.</div>
   <div class="rules">
     <div class="rule"><b>WASD</b>Bergerak</div>
-    <div class="rule"><b>Mouse</b>Lihat sekeliling</div>
-    <div class="rule"><b>Klik Kiri</b>Interaksi</div>
-    <div class="rule"><b>Spasi</b>Lompat</div>
-    <div class="rule"><b>C</b>Kalkulator</div>
-    <div class="rule"><b>V</b>Status</div>
+    <div class="rule"><b>Mouse</b>Lihat</div>
+    <div class="rule"><b>Klik</b>Interaksi</div>
   </div>
-  <button class="btn" id="startBtn">Masuk Apartemen</button>
-</div>
-
-<!-- PAUSE -->
-<div id="pause" class="overlay hidden">
-  <div class="eyebrow">Dijeda</div>
-  <div class="title-main" style="font-size:36px;">Sedang Istirahat</div>
-  <div class="subtitle" id="pauseSummary">Progres tersimpan.</div>
-  <button class="btn" id="resumeBtn">Lanjutkan</button>
-  <button class="btn secondary" id="restartBtn">Mulai Ulang</button>
+  <button class="btn" id="startBtn">Mulai Simulasi</button>
 </div>
 
 <!-- WIN -->
 <div id="winscreen" class="overlay hidden">
-  <div class="eyebrow">Semua Tenang Kembali</div>
-  <div class="title-main">PERANGKAT <span>AKTIF</span></div>
-  <div class="subtitle">Semua komponen terpasang, anomali reda, dan perangkat di ruang belakang kembali menyala tenang.</div>
-  <button class="btn" id="playAgainBtn">Main Lagi</button>
+  <div class="eyebrow">Stabilitas Tercapai</div>
+  <div class="title-main">REALITAS <span>DIAMANKAN</span></div>
+  <div class="subtitle">Anomali telah diredakan. Inti reaktor kembali stabil dan badai mulai mereda. Kerja bagus, Operator.</div>
+  <button class="btn" id="playAgainBtn">Keluar Simulasi</button>
 </div>
 
 <!-- HUD -->
 <div id="hud" class="hidden">
   <div id="crosshair"></div>
   <div id="missionPanel">
-    <h3>Daftar Misi</h3>
-    <div class="mission-item" id="m1"><div class="mission-name"><span>Kumpulkan Komponen</span><span class="count">0/5</span></div><div class="bar-track"><div class="bar-fill" id="m1bar"></div></div></div>
-    <div class="mission-item" id="m2"><div class="mission-name"><span>Redakan Anomali</span><span class="count">0/5</span></div><div class="bar-track"><div class="bar-fill" id="m2bar"></div></div></div>
-    <div class="mission-item" id="m3"><div class="mission-name"><span>Nyalakan Perangkat</span><span class="count">0/1</span></div><div class="bar-track"><div class="bar-fill" id="m3bar"></div></div></div>
-  </div>
-  <div id="radarWrap"><canvas id="radar" width="130" height="130"></canvas></div>
-  <div id="healthWrap"><div class="label">Vitalitas</div><div id="healthTrack"><div id="healthFill"></div></div></div>
-  <div id="hint">Klik untuk mengunci kursor</div>
-  <div id="toolButtons">
-    <div class="toolBtn" id="openCalcBtn"><b>🖩</b>Kalkulator</div>
-    <div class="toolBtn" id="openStatusBtn"><b>📋</b>Status</div>
+    <h3>Protokol Darurat</h3>
+    <div class="mission-item" id="m1"><div class="mission-name"><span>Isolator Inti</span><span class="count">0/5</span></div><div class="bar-track"><div class="bar-fill" id="m1bar"></div></div></div>
+    <div class="mission-item" id="m2"><div class="mission-name"><span>Netralisir Glitch</span><span class="count">0/5</span></div><div class="bar-track"><div class="bar-fill" id="m2bar"></div></div></div>
+    <div class="mission-item" id="m3"><div class="mission-name"><span>Restart Reaktor</span><span class="count">0/1</span></div><div class="bar-track"><div class="bar-fill" id="m3bar"></div></div></div>
   </div>
   <div id="toastWrap"></div>
-  <div id="vignetteHit"></div>
-</div>
-
-<!-- CALCULATOR -->
-<div id="calcModal" class="modal hidden">
-  <div class="modalBox">
-    <div class="modalTitle">Kalkulator</div>
-    <div id="calcScreen" class="mono">0</div>
-    <div id="calcGrid"></div>
-    <button class="btn secondary modalClose" id="closeCalcBtn">Tutup (Esc)</button>
-  </div>
-</div>
-
-<!-- STATUS -->
-<div id="statusModal" class="modal hidden">
-  <div class="modalBox" id="statModalBox">
-    <div class="modalTitle">Status</div>
-    <div class="statRow"><span>Kode Nama</span><span class="val">RX-7</span></div>
-    <div class="statRow"><span>Waktu Bermain</span><span class="val" id="statTime">00:00</span></div>
-    <div class="statRow"><span>Indeks Anomali</span><span class="val" id="statWorldline">0.192837</span></div>
-    <div class="statRow"><span>Vitalitas</span><span class="val sage" id="statHealth">100%</span></div>
-    <div class="statRow"><span>Komponen Terkumpul</span><span class="val" id="statM1">0/5</span></div>
-    <div class="statRow"><span>Anomali Diredakan</span><span class="val" id="statM2">0/5</span></div>
-    <div class="statRow"><span>Status Perangkat</span><span class="val" id="statM3">Nonaktif</span></div>
-    <button class="btn secondary modalClose" id="closeStatusBtn">Tutup (Esc)</button>
-  </div>
 </div>
 
 <script>
@@ -237,926 +155,522 @@
   "use strict";
 
   // ============================================================
-  // RENDERER / SCENE
+  // RENDERER / SCENE / CAMERA
   // ============================================================
   const canvas = document.getElementById('game');
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias:true });
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias:true, powerPreference: "high-performance" });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.05;
+  renderer.toneMappingExposure = 0.8; // Darker for storm vibe
 
   const scene = new THREE.Scene();
-  const camera = new THREE.PerspectiveCamera(70, window.innerWidth/window.innerHeight, 0.1, 300);
+  const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 500);
   camera.rotation.order = 'YXZ';
-  scene.background = new THREE.Color(0x0c0a08);
-  scene.fog = new THREE.Fog(0x1a140e, 18, 55);
+  scene.background = new THREE.Color(0x020305);
+  scene.fog = new THREE.FogExp2(0x05070a, 0.025);
 
+  // Helper functions
   function rand(min,max){ return Math.random()*(max-min)+min; }
-  function canvasTexture(draw, w, h, repeatX, repeatZ){
-    const c = document.createElement('canvas'); c.width=w; c.height=h;
-    const ctx = c.getContext('2d');
-    draw(ctx, w, h);
-    const tex = new THREE.CanvasTexture(c);
-    tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
-    if(repeatX) tex.repeat.set(repeatX, repeatZ||repeatX);
-    return tex;
-  }
   function glowTexture(hex){
     const c = document.createElement('canvas'); c.width=128;c.height=128;
     const ctx = c.getContext('2d');
     const grad = ctx.createRadialGradient(64,64,0,64,64,64);
     const col = new THREE.Color(hex);
-    grad.addColorStop(0, 'rgba('+Math.round(col.r*255)+','+Math.round(col.g*255)+','+Math.round(col.b*255)+',0.9)');
-    grad.addColorStop(1, 'rgba('+Math.round(col.r*255)+','+Math.round(col.g*255)+','+Math.round(col.b*255)+',0)');
+    grad.addColorStop(0, `rgba(${Math.round(col.r*255)},${Math.round(col.g*255)},${Math.round(col.b*255)},1)`);
+    grad.addColorStop(0.3, `rgba(${Math.round(col.r*255)},${Math.round(col.g*255)},${Math.round(col.b*255)},0.5)`);
+    grad.addColorStop(1, `rgba(${Math.round(col.r*255)},${Math.round(col.g*255)},${Math.round(col.b*255)},0)`);
     ctx.fillStyle = grad; ctx.fillRect(0,0,128,128);
     return new THREE.CanvasTexture(c);
   }
 
   // ============================================================
-  // LIGHTING (warm evening apartment)
+  // LIGHTING & WEATHER (Thunderstorm)
   // ============================================================
-  const ambient = new THREE.AmbientLight(0x554433, 0.65);
+  const ambient = new THREE.AmbientLight(0x1a2639, 0.4); // Cold ambient
   scene.add(ambient);
-  const windowLight = new THREE.DirectionalLight(0x9fb8e0, 0.55);
-  windowLight.position.set(-20, 8, -2);
-  scene.add(windowLight);
-  const pendantLight = new THREE.PointLight(0xffcf9a, 1.3, 16);
-  pendantLight.position.set(3, 6.6, -8.5);
-  pendantLight.castShadow = true;
-  scene.add(pendantLight);
-  const roomFill = new THREE.PointLight(0xffdcb0, 0.5, 30);
-  roomFill.position.set(0, 6, 0);
+  
+  // Lightning effect
+  const lightningLight = new THREE.DirectionalLight(0xccddff, 0);
+  lightningLight.position.set(-50, 20, -10);
+  scene.add(lightningLight);
+
+  const roomFill = new THREE.PointLight(0xffaa55, 0.5, 20); // Warm interior
+  roomFill.position.set(0, 5, 0);
   scene.add(roomFill);
 
-  // ============================================================
-  // ROOM GEOMETRY
-  // ============================================================
-  const ROOM_X = 15.5, ROOM_Z = 10.5, ROOM_H = 7.2;
-  const obstacles = []; // {x,z,r}
+  // Rain Particles Outside Window
+  const rainCount = 3000;
+  const rainGeo = new THREE.BufferGeometry();
+  const rainPos = new Float32Array(rainCount * 3);
+  const rainVel = [];
+  for(let i=0; i<rainCount; i++){
+    rainPos[i*3] = rand(-40, -16); // Outside the window (X < -15.5)
+    rainPos[i*3+1] = rand(-5, 25); // Y
+    rainPos[i*3+2] = rand(-20, 15); // Z
+    rainVel.push(rand(0.5, 0.8)); // Speed variation
+  }
+  rainGeo.setAttribute('position', new THREE.BufferAttribute(rainPos, 3));
+  const rainMat = new THREE.PointsMaterial({ color: 0xaaccff, size: 0.1, transparent: true, opacity: 0.6, blending: THREE.AdditiveBlending });
+  const rainSystem = new THREE.Points(rainGeo, rainMat);
+  scene.add(rainSystem);
 
-  const floorTex = canvasTexture((ctx,w,h)=>{
-    ctx.fillStyle = '#6b4a30'; ctx.fillRect(0,0,w,h);
-    for(let i=0;i<8;i++){
-      ctx.fillStyle = 'rgba(0,0,0,0.06)';
-      ctx.fillRect(0, i*32, w, 2);
-    }
-    for(let i=0;i<60;i++){
-      ctx.fillStyle = 'rgba(255,220,180,'+(Math.random()*0.05)+')';
-      ctx.fillRect(Math.random()*w, Math.random()*h, Math.random()*30+6, 2);
-    }
-  }, 256,256, 12,9);
-  const floorMat = new THREE.MeshStandardMaterial({ map: floorTex, roughness:0.55, metalness:0.08 });
-  const floor = new THREE.Mesh(new THREE.PlaneGeometry(34,32), floorMat);
+  // ============================================================
+  // ROOM GEOMETRY (Cyberpunk-ish / Darker)
+  // ============================================================
+  const ROOM_X = 15.5, ROOM_Z = 10.5, ROOM_H = 8;
+  const obstacles = [];
+
+  // Floor (Reflective, dark)
+  const floorMat = new THREE.MeshStandardMaterial({ color: 0x111316, roughness: 0.2, metalness: 0.6 });
+  const floor = new THREE.Mesh(new THREE.PlaneGeometry(40,40), floorMat);
   floor.rotation.x = -Math.PI/2; floor.position.set(0,0,-4.5); floor.receiveShadow = true;
   scene.add(floor);
 
-  const wallTex = canvasTexture((ctx,w,h)=>{
-    ctx.fillStyle = '#cfc4ab'; ctx.fillRect(0,0,w,h);
-    for(let i=0;i<180;i++){
-      ctx.fillStyle = 'rgba(0,0,0,'+(Math.random()*0.05)+')';
-      ctx.fillRect(Math.random()*w, Math.random()*h, Math.random()*3+1, Math.random()*3+1);
-    }
-  }, 256,256, 5,2);
-  const wallMat = new THREE.MeshStandardMaterial({ map: wallTex, roughness:0.95 });
-
-  const ceilMat = new THREE.MeshStandardMaterial({ color:0xece4d2, roughness:1 });
-  const ceiling = new THREE.Mesh(new THREE.PlaneGeometry(34,32), ceilMat);
-  ceiling.position.set(0, ROOM_H, -4.5); ceiling.rotation.x = Math.PI/2;
-  scene.add(ceiling);
-
+  // Walls (Concrete dark)
+  const wallMat = new THREE.MeshStandardMaterial({ color: 0x2a2d34, roughness: 0.9, metalness: 0.1 });
   function addWall(x,z,rotY,length,h,yOffset){
     const wall = new THREE.Mesh(new THREE.PlaneGeometry(length, h||ROOM_H), wallMat);
     wall.position.set(x, (yOffset||0)+(h||ROOM_H)/2, z);
-    wall.rotation.y = rotY;
-    wall.receiveShadow = true;
-    scene.add(wall);
+    wall.rotation.y = rotY; wall.receiveShadow = true; scene.add(wall);
   }
-  // main room: left, right walls; back wall split for hallway gap at x[-13,-9]
   addWall(-ROOM_X, 0, Math.PI/2, ROOM_Z*2);
   addWall(ROOM_X, 0, -Math.PI/2, ROOM_Z*2);
-  addWall((-ROOM_X-13)/2, -ROOM_Z, 0, 2.5);      // back wall segment left of hallway
-  addWall((15.5-9)/2, -ROOM_Z, 0, 24.5);          // back wall segment right of hallway
-  // corridor walls
+  addWall((-ROOM_X-13)/2, -ROOM_Z, 0, 2.5);      
+  addWall((15.5-9)/2, -ROOM_Z, 0, 24.5);          
   addWall(-13, -15.25, Math.PI/2, 9.5);
   addWall(-9, -15.25, -Math.PI/2, 9.5);
   addWall(-11, -20, 0, 4);
 
-  function isInsideWalkable(x,z){
-    if(x>=-ROOM_X+0.6 && x<=ROOM_X-0.6 && z>=-ROOM_Z+0.6 && z<=ROOM_Z-0.6) return true;
-    if(x>=-12.4 && x<=-9.6 && z>=-19.4 && z<=-10.4) return true;
-    return false;
-  }
+  // Huge Glass Window
+  const glassMat = new THREE.MeshPhysicalMaterial({ color: 0x88bbff, transmission: 0.9, opacity: 1, metalness: 0, roughness: 0.1, ior: 1.5, side: THREE.DoubleSide });
+  const windowGlass = new THREE.Mesh(new THREE.PlaneGeometry(12, 6), glassMat);
+  windowGlass.position.set(-ROOM_X+0.1, 4, -2);
+  windowGlass.rotation.y = Math.PI/2;
+  scene.add(windowGlass);
+  
+  // Window Frame
+  const frameMat = new THREE.MeshStandardMaterial({color: 0x111111, metalness:0.8, roughness:0.2});
+  const frame1 = new THREE.Mesh(new THREE.BoxGeometry(0.2, 6, 0.2), frameMat); frame1.position.set(-ROOM_X+0.1, 4, -2); scene.add(frame1);
+  const frame2 = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.2, 12), frameMat); frame2.position.set(-ROOM_X+0.1, 4, -2); scene.add(frame2);
 
   // ============================================================
-  // KITCHEN NOOK (back-right, matches reference photo)
+  // INTERACTIVE DESK & MONITOR
   // ============================================================
-  (function buildKitchen(){
-    const group = new THREE.Group();
-    const cabWood = new THREE.MeshStandardMaterial({ color:0xece7db, roughness:0.6 });
-    const cabDark = new THREE.MeshStandardMaterial({ color:0x211d1a, roughness:0.5, metalness:0.3 });
-
-    // upper cabinet with lit interior
-    const upper = new THREE.Mesh(new THREE.BoxGeometry(3.2,1.3,0.6), cabWood);
-    upper.position.set(0, 5.6, -0.2); upper.castShadow=true;
-    group.add(upper);
-    const hood = new THREE.Mesh(new THREE.BoxGeometry(2.2,1.0,0.7), cabDark);
-    hood.position.set(2.6, 5.5, -0.15);
-    group.add(hood);
-
-    // countertop + lower cabinets
-    const counter = new THREE.Mesh(new THREE.BoxGeometry(6.2,0.15,1.5), cabDark);
-    counter.position.set(1, 3.05, 0.1); counter.castShadow=true; counter.receiveShadow=true;
-    group.add(counter);
-    const lower = new THREE.Mesh(new THREE.BoxGeometry(6.2,2.9,1.4), cabWood);
-    lower.position.set(1, 1.5, 0.1); lower.castShadow=true;
-    group.add(lower);
-
-    // backsplash tile
-    const tileTex = canvasTexture((ctx,w,h)=>{
-      ctx.fillStyle = '#cfd6d2'; ctx.fillRect(0,0,w,h);
-      ctx.strokeStyle = 'rgba(0,0,0,0.25)'; ctx.lineWidth=2;
-      for(let i=0;i<=8;i++){ ctx.beginPath(); ctx.moveTo(i*32,0); ctx.lineTo(i*32,h); ctx.stroke(); }
-      for(let i=0;i<=4;i++){ ctx.beginPath(); ctx.moveTo(0,i*64); ctx.lineTo(w,i*64); ctx.stroke(); }
-    }, 256,256,2,1);
-    const tile = new THREE.Mesh(new THREE.PlaneGeometry(6.2,1.9), new THREE.MeshStandardMaterial({map:tileTex, roughness:0.4}));
-    tile.position.set(1, 4.05, -0.55);
-    group.add(tile);
-
-    // pendant lamp cord + shade
-    const cord = new THREE.Mesh(new THREE.CylinderGeometry(0.02,0.02,1.6,6), new THREE.MeshStandardMaterial({color:0x111111}));
-    cord.position.set(2.3, 6.4, 0.2); group.add(cord);
-    const shade = new THREE.Mesh(new THREE.ConeGeometry(0.5,0.4,12,1,true), new THREE.MeshStandardMaterial({ color:0x1a1a1a, side:THREE.DoubleSide }));
-    shade.position.set(2.3, 5.6, 0.2); group.add(shade);
-
-    // stove
-    const stove = new THREE.Mesh(new THREE.BoxGeometry(1.6,0.1,1.2), new THREE.MeshStandardMaterial({color:0x161616, metalness:0.6, roughness:0.3}));
-    stove.position.set(3.4, 3.12, 0.1); group.add(stove);
-
-    group.position.set(0, 0, -10.3);
-    scene.add(group);
-    obstacles.push({x:1,z:-10.0,r:3.4});
-  })();
-
-  // ============================================================
-  // WINDOW + DESK AREA (left wall)
-  // ============================================================
-  (function buildWindow(){
-    const winTex = canvasTexture((ctx,w,h)=>{
-      const grad = ctx.createLinearGradient(0,0,0,h);
-      grad.addColorStop(0,'#2a3550'); grad.addColorStop(0.5,'#4a5a78'); grad.addColorStop(1,'#8fa0b8');
-      ctx.fillStyle = grad; ctx.fillRect(0,0,w,h);
-      ctx.fillStyle = 'rgba(255,235,190,0.55)';
-      for(let i=0;i<14;i++){ ctx.fillRect(0, i*(h/14)+4, w, 5); }
-    }, 128,256);
-    const winMat = new THREE.MeshStandardMaterial({ map:winTex, emissive:0xffe9c0, emissiveIntensity:0.35, roughness:0.3 });
-    const win = new THREE.Mesh(new THREE.PlaneGeometry(6.5,4.6), winMat);
-    win.position.set(-ROOM_X+0.05, 4.2, -3.5);
-    win.rotation.y = Math.PI/2;
-    scene.add(win);
-    const winLight = new THREE.PointLight(0xffe4b0, 0.6, 10);
-    winLight.position.set(-ROOM_X+1.2, 4, -3.5);
-    scene.add(winLight);
-  })();
-
+  const monitors = [];
   function addDesk(x,z,rotY){
     const group = new THREE.Group();
-    const woodMat = new THREE.MeshStandardMaterial({ color:0x3f3226, roughness:0.7 });
-    const top = new THREE.Mesh(new THREE.BoxGeometry(2.6,0.12,1.2), woodMat);
-    top.position.y = 1.05; top.castShadow=true; top.receiveShadow=true;
-    group.add(top);
-    const legMat = new THREE.MeshStandardMaterial({ color:0x1a1310, roughness:0.9 });
-    [[-1.15,-0.45],[1.15,-0.45],[-1.15,0.45],[1.15,0.45]].forEach(([lx,lz])=>{
-      const leg = new THREE.Mesh(new THREE.BoxGeometry(0.1,1.05,0.1), legMat);
-      leg.position.set(lx,0.52,lz); group.add(leg);
-    });
-    // monitor (screen with code texture)
-    const c = document.createElement('canvas'); c.width=128;c.height=96;
+    const woodMat = new THREE.MeshStandardMaterial({ color:0x111111, roughness:0.4, metalness:0.8 });
+    const top = new THREE.Mesh(new THREE.BoxGeometry(3,0.1,1.5), woodMat);
+    top.position.y = 1.05; top.castShadow=true; group.add(top);
+    
+    // Monitor screen (Interactive)
+    const c = document.createElement('canvas'); c.width=256;c.height=128;
     const ctx = c.getContext('2d');
     const tex = new THREE.CanvasTexture(c);
-    monitors.push({ ctx, tex, w:128, h:96, timer:0 });
-    const screen = new THREE.Mesh(new THREE.PlaneGeometry(0.85,0.62), new THREE.MeshBasicMaterial({map:tex}));
-    const frame = new THREE.Mesh(new THREE.BoxGeometry(1.0,0.75,0.5), new THREE.MeshStandardMaterial({color:0xe6e2d6, roughness:0.6}));
-    frame.position.set(0,1.55,-0.15);
-    screen.position.set(0,0,0.26);
-    frame.add(screen);
-    group.add(frame);
-    // chair
-    const chairMat = new THREE.MeshStandardMaterial({color:0x2b2b2b, roughness:0.6});
-    const seat = new THREE.Mesh(new THREE.CylinderGeometry(0.42,0.42,0.1,10), chairMat);
-    seat.position.set(0,0.9,1.0); group.add(seat);
-    const back = new THREE.Mesh(new THREE.BoxGeometry(0.7,0.7,0.08), chairMat);
-    back.position.set(0,1.35,1.35); group.add(back);
-    const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.05,0.05,0.85,8), chairMat);
-    pole.position.set(0,0.45,1.0); group.add(pole);
+    
+    const screenMat = new THREE.MeshBasicMaterial({map:tex});
+    const screen = new THREE.Mesh(new THREE.PlaneGeometry(1.2,0.6), screenMat);
+    screen.position.set(0, 1.6, -0.2); screen.rotation.x = -0.1;
+    group.add(screen);
+    
+    // Glow light for monitor
+    const monLight = new THREE.PointLight(0x00ffcc, 0.5, 4);
+    monLight.position.set(0, 1.6, 0.5);
+    group.add(monLight);
 
+    monitors.push({ ctx, tex, w:256, h:128, timer:0, active: false, light: monLight, screen: screen });
+    
     group.position.set(x,0,z); group.rotation.y = rotY||0;
     scene.add(group);
     obstacles.push({x:x+Math.sin(rotY||0)*0.3, z:z+Math.cos(rotY||0)*1.0, r:1.5});
-    return group;
   }
-  const monitors = [];
-  function drawMonitor(m){
-    m.ctx.fillStyle = '#08130c'; m.ctx.fillRect(0,0,m.w,m.h);
-    m.ctx.fillStyle = '#8fbf7a'; m.ctx.font = '9px monospace';
-    for(let i=0;i<9;i++){
-      let line='';
-      const len = 12 + Math.floor(Math.random()*8);
-      for(let j=0;j<len;j++) line += Math.random()<0.5 ? Math.floor(Math.random()*10) : String.fromCharCode(65+Math.floor(Math.random()*26));
-      m.ctx.fillText(line, 3, 11+i*10);
+  
+  function drawMonitor(m, playerDist){
+    const isActive = playerDist < 3.5;
+    m.ctx.fillStyle = isActive ? '#051a14' : '#010203'; 
+    m.ctx.fillRect(0,0,m.w,m.h);
+    m.ctx.font = '12px "Space Mono"';
+    
+    if(isActive) {
+        m.light.intensity = 1.0 + Math.random()*0.2;
+        m.light.color.setHex(0x00ffcc);
+        m.ctx.fillStyle = '#00ffcc';
+        m.ctx.fillText('>> SYSTEM OVERRIDE ACTIVE', 10, 20);
+        m.ctx.fillText('>> ANOMALY DETECTED: ' + (Math.random()*100).toFixed(2) + '%', 10, 40);
+        m.ctx.fillText('>> REACTOR STABILITY: CRITICAL', 10, 60);
+        for(let i=0; i<3; i++){
+            m.ctx.fillRect(10, 80 + i*15, Math.random()*200, 8);
+        }
+    } else {
+        m.light.intensity = 0.2;
+        m.light.color.setHex(0xff3333);
+        m.ctx.fillStyle = '#ff3333';
+        m.ctx.fillText('STANDBY MODE', 10, 64);
     }
     m.tex.needsUpdate = true;
   }
-  addDesk(-13, -3.5, Math.PI/2);
-
-  // bookshelf near desk
-  (function addBookshelf(){
-    const group = new THREE.Group();
-    const woodMat = new THREE.MeshStandardMaterial({ color:0x4a3a28, roughness:0.75 });
-    const frameMesh = new THREE.Mesh(new THREE.BoxGeometry(1.6,3.2,0.5), woodMat);
-    frameMesh.position.y = 1.6; frameMesh.castShadow = true;
-    group.add(frameMesh);
-    const bookColors = [0xa33a3a,0x3a6ea3,0xd4a63a,0x3aa35c,0x7a3aa3];
-    for(let shelf=0; shelf<3; shelf++){
-      for(let i=0;i<5;i++){
-        const bh = rand(0.35,0.55);
-        const book = new THREE.Mesh(new THREE.BoxGeometry(0.18,bh,0.35), new THREE.MeshStandardMaterial({color:bookColors[i%bookColors.length], roughness:0.7}));
-        book.position.set(-0.6+i*0.28, 0.6+shelf*1.0+bh/2, 0.05);
-        group.add(book);
-      }
-    }
-    group.position.set(-14, 0, -7.5);
-    scene.add(group);
-    obstacles.push({x:-14,z:-7.5,r:1.0});
-  })();
+  addDesk(-13, -3, Math.PI/2);
 
   // ============================================================
-  // LIVING AREA (green sofa + table) — right wall
-  // ============================================================
-  (function buildSofa(){
-    const group = new THREE.Group();
-    const fabMat = new THREE.MeshStandardMaterial({ color:0x6f9a52, roughness:0.9 });
-    const base = new THREE.Mesh(new THREE.BoxGeometry(4.2,0.9,1.6), fabMat);
-    base.position.y = 0.5; base.castShadow=true; base.receiveShadow=true;
-    group.add(base);
-    const backCush = new THREE.Mesh(new THREE.BoxGeometry(4.2,1.0,0.5), fabMat);
-    backCush.position.set(0,1.3,-0.55); backCush.castShadow=true;
-    group.add(backCush);
-    [-1.5,1.5].forEach(ax=>{
-      const arm = new THREE.Mesh(new THREE.BoxGeometry(0.5,1.1,1.6), fabMat);
-      arm.position.set(ax*1.85,0.75,0); arm.castShadow=true;
-      group.add(arm);
-    });
-    for(let i=0;i<2;i++){
-      const cushion = new THREE.Mesh(new THREE.BoxGeometry(1.9,0.35,1.4), new THREE.MeshStandardMaterial({color:0x7fae63, roughness:0.9}));
-      cushion.position.set(-1+i*2, 1.0, 0.05); cushion.castShadow=true;
-      group.add(cushion);
-    }
-    group.position.set(12, 0, 3);
-    group.rotation.y = -Math.PI/2;
-    scene.add(group);
-    obstacles.push({x:12,z:3,r:2.6});
-  })();
-
-  (function buildCoffeeTable(){
-    const woodMat = new THREE.MeshStandardMaterial({ color:0x8a7355, roughness:0.6 });
-    const top = new THREE.Mesh(new THREE.BoxGeometry(2.0,0.1,1.1), woodMat);
-    top.position.set(6.5, 0.95, 2); top.castShadow=true; top.receiveShadow=true;
-    scene.add(top);
-    const matTop = new THREE.Mesh(new THREE.PlaneGeometry(0.8,0.5), new THREE.MeshStandardMaterial({color:0x6f9a52, roughness:0.8}));
-    matTop.rotation.x=-Math.PI/2; matTop.position.set(6.5,1.005,2);
-    scene.add(matTop);
-    [[-0.85,-0.45],[0.85,-0.45],[-0.85,0.45],[0.85,0.45]].forEach(([lx,lz])=>{
-      const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.05,0.05,0.9,8), woodMat);
-      leg.position.set(6.5+lx,0.45,2+lz); scene.add(leg);
-    });
-    obstacles.push({x:6.5,z:2,r:1.3});
-  })();
-
-  // whiteboard, calendar, clock on right wall
-  (function buildWallDecor(){
-    const boardTex = canvasTexture((ctx,w,h)=>{
-      ctx.fillStyle = '#f0efe8'; ctx.fillRect(0,0,w,h);
-      ctx.strokeStyle = '#c9c4b6'; ctx.lineWidth=6; ctx.strokeRect(4,4,w-8,h-8);
-      ctx.fillStyle = '#7a7468'; ctx.font='18px sans-serif';
-      ctx.fillText('to-do:', 20,34);
-      ctx.fillText('- cek perangkat', 20,64);
-      ctx.fillText('- beli baterai', 20,90);
-    }, 320,220);
-    const board = new THREE.Mesh(new THREE.PlaneGeometry(3.0,2.0), new THREE.MeshStandardMaterial({map:boardTex, roughness:0.8}));
-    board.position.set(ROOM_X-0.05, 4.6, 5.5); board.rotation.y=-Math.PI/2;
-    scene.add(board);
-    const frame = new THREE.Mesh(new THREE.BoxGeometry(0.08,2.15,3.15), new THREE.MeshStandardMaterial({color:0x5a3d2a, roughness:0.6}));
-    frame.position.set(ROOM_X-0.1, 4.6, 5.5);
-    scene.add(frame);
-
-    // calendar
-    const calTex = canvasTexture((ctx,w,h)=>{
-      ctx.fillStyle = '#1c2a44'; ctx.fillRect(0,0,w,h*0.4);
-      ctx.fillStyle = '#f0efe8'; ctx.fillRect(0,h*0.4,w,h*0.6);
-      ctx.fillStyle='#e8b96b'; ctx.font='bold 26px sans-serif'; ctx.fillText('◐', w/2-14, h*0.28);
-    }, 120,180);
-    const cal = new THREE.Mesh(new THREE.PlaneGeometry(0.9,1.35), new THREE.MeshStandardMaterial({map:calTex}));
-    cal.position.set(ROOM_X-0.05, 4.3, 2.7); cal.rotation.y=-Math.PI/2;
-    scene.add(cal);
-
-    // clock
-    const clockTex = canvasTexture((ctx,w,h)=>{
-      ctx.fillStyle = '#f2efe6'; ctx.beginPath(); ctx.arc(64,64,60,0,Math.PI*2); ctx.fill();
-      ctx.strokeStyle='#5a3d2a'; ctx.lineWidth=6; ctx.stroke();
-      ctx.fillStyle='#2b241c';
-      for(let i=0;i<12;i++){
-        const a = (i/12)*Math.PI*2;
-        ctx.fillRect(64+Math.cos(a)*50-2, 64+Math.sin(a)*50-2,4,4);
-      }
-      ctx.strokeStyle='#2b241c'; ctx.lineWidth=3;
-      ctx.beginPath(); ctx.moveTo(64,64); ctx.lineTo(64+Math.cos(0.5)*30, 64+Math.sin(0.5)*30); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(64,64); ctx.lineTo(64+Math.cos(2.1)*40, 64+Math.sin(2.1)*40); ctx.stroke();
-    }, 128,128);
-    const clock = new THREE.Mesh(new THREE.CircleGeometry(0.55,24), new THREE.MeshStandardMaterial({map:clockTex}));
-    clock.position.set(ROOM_X-0.05, 6.2, 0.5); clock.rotation.y=-Math.PI/2;
-    scene.add(clock);
-  })();
-
-  // magenta curtain strands near hallway opening (main room side)
-  (function addCurtain(){
-    const curtainMat = new THREE.MeshStandardMaterial({ color:0xc27a92, transparent:true, opacity:0.75, roughness:0.6, side:THREE.DoubleSide });
-    for(let i=0;i<9;i++){
-      const strip = new THREE.Mesh(new THREE.PlaneGeometry(0.28,3.4), curtainMat);
-      strip.position.set(-11+(i-4)*0.32, 3.0, -10.35);
-      scene.add(strip);
-    }
-  })();
-
-  // scattered clutter boxes
-  for(let i=0;i<8;i++){
-    const s = rand(0.4,0.8);
-    const box = new THREE.Mesh(new THREE.BoxGeometry(s,s,s), new THREE.MeshStandardMaterial({color:0x6a4f36, roughness:0.9}));
-    let x,z;
-    do{ x = rand(-ROOM_X+2,ROOM_X-2); z = rand(-ROOM_Z+2,ROOM_Z-2); } while(Math.hypot(x,z)<3 || Math.hypot(x-1,z+10)<4 || Math.hypot(x-12,z-3)<3);
-    box.position.set(x, s/2, z); box.rotation.y = rand(0,Math.PI); box.castShadow=true;
-    scene.add(box);
-    obstacles.push({x,z,r:s*0.7});
-  }
-
-  // ============================================================
-  // DEVICE (back room) — "mesin waktu"
+  // COMPLEX 3D DEVICE (REACTOR CORE)
   // ============================================================
   const devicePos = {x:-11, z:-17};
-  const machineRings = [];
   const coreRef = {};
   (function buildDevice(){
     const group = new THREE.Group();
-    const baseMat = new THREE.MeshStandardMaterial({ color:0x2a2a2a, roughness:0.5, metalness:0.5 });
-    const table = new THREE.Mesh(new THREE.BoxGeometry(2.0,0.9,1.2), new THREE.MeshStandardMaterial({color:0x3f3226, roughness:0.7}));
-    table.position.y = 0.45; table.castShadow=true;
-    group.add(table);
-    const base = new THREE.Mesh(new THREE.CylinderGeometry(0.6,0.7,0.5,14), baseMat);
-    base.position.y = 1.15; group.add(base);
-    const coreMat = new THREE.MeshStandardMaterial({ color:0x6fd0ff, emissive:0x6fd0ff, emissiveIntensity:1.3, roughness:0.2, metalness:0.3 });
-    const core = new THREE.Mesh(new THREE.SphereGeometry(0.42,20,20), coreMat);
-    core.position.y = 1.9; group.add(core);
+    
+    // Base platform
+    const baseMat = new THREE.MeshStandardMaterial({ color:0x111111, roughness:0.2, metalness:0.9 });
+    const base = new THREE.Mesh(new THREE.CylinderGeometry(1.5, 1.8, 0.4, 32), baseMat);
+    group.add(base);
+
+    // TorusKnot Core (High detail)
+    const coreMat = new THREE.MeshStandardMaterial({ color:0x0088ff, emissive:0x0055ff, emissiveIntensity:2, roughness:0.1, metalness:0.8, wireframe: true });
+    const core = new THREE.Mesh(new THREE.TorusKnotGeometry(0.6, 0.2, 100, 16), coreMat);
+    core.position.y = 2.0; group.add(core);
     coreRef.mesh = core;
-    const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTexture(0x6fd0ff), transparent:true, blending:THREE.AdditiveBlending }));
-    glow.scale.set(2.6,2.6,1); glow.position.y = 1.9; group.add(glow);
-    const ringMat = new THREE.MeshStandardMaterial({ color:0x111111, emissive:0x6fd0ff, emissiveIntensity:0.5, metalness:0.7, roughness:0.3 });
-    for(let i=0;i<3;i++){
-      const ring = new THREE.Mesh(new THREE.TorusGeometry(0.7+i*0.25,0.035,8,28), ringMat);
-      ring.position.y = 1.9; ring.rotation.x = Math.PI/2 + i*0.4;
-      group.add(ring); machineRings.push(ring);
-    }
-    const light = new THREE.PointLight(0x6fd0ff, 1.6, 12);
-    light.position.y = 1.9; group.add(light);
+
+    // Glowing Inner Sphere
+    const innerSphere = new THREE.Mesh(new THREE.SphereGeometry(0.4, 32, 32), new THREE.MeshBasicMaterial({color: 0x00ffff}));
+    innerSphere.position.y = 2.0; group.add(innerSphere);
+    coreRef.inner = innerSphere;
+
+    const light = new THREE.PointLight(0x00aaff, 3, 15);
+    light.position.y = 2.0; group.add(light);
     coreRef.light = light;
-    group.position.set(devicePos.x, 0, devicePos.z);
+
+    // Floating Rings
+    coreRef.rings = [];
+    const ringMat = new THREE.MeshStandardMaterial({ color:0x333333, metalness: 1, roughness: 0 });
+    for(let i=0; i<3; i++){
+        const ring = new THREE.Mesh(new THREE.TorusGeometry(1.2 + i*0.3, 0.05, 16, 64), ringMat);
+        ring.position.y = 2.0;
+        ring.rotation.x = Math.random() * Math.PI;
+        group.add(ring);
+        coreRef.rings.push({mesh: ring, speed: rand(0.5, 1.5), axis: new THREE.Vector3(rand(-1,1), rand(-1,1), rand(-1,1)).normalize()});
+    }
+
+    group.position.set(devicePos.x, 0.2, devicePos.z);
     scene.add(group);
-    obstacles.push({x:devicePos.x,z:devicePos.z,r:1.3});
-    // small warm lamp in back room so it's not pitch black
-    const backLamp = new THREE.PointLight(0xffcf9a, 0.5, 10);
-    backLamp.position.set(-11, 4, -18.5);
-    scene.add(backLamp);
+    obstacles.push({x:devicePos.x,z:devicePos.z,r:2.0});
   })();
 
   // ============================================================
-  // COLLECTIBLES (components) — Mission 1
+  // COLLECTIBLES & ANOMALIES
   // ============================================================
-  const componentSpots = [
-    {x:1,z:-8.6},{x:-14,z:-6.5},{x:9,z:5},{x:-11,z:-13.5},{x:8,z:-2}
-  ];
   const components = [];
-  const compMat = new THREE.MeshStandardMaterial({ color:0xe8b96b, emissive:0xe8b96b, emissiveIntensity:1.0, roughness:0.3, metalness:0.4 });
-  componentSpots.forEach(p=>{
+  const compMat = new THREE.MeshStandardMaterial({ color:0xffaa00, emissive:0xffaa00, emissiveIntensity:1.5, roughness:0.2, metalness:0.8 });
+  [{x:1,z:-8},{x:-14,z:-6},{x:10,z:6},{x:-10,z:-12},{x:8,z:-3}].forEach(p=>{
     const group = new THREE.Group();
-    const tube = new THREE.Mesh(new THREE.CylinderGeometry(0.22,0.22,0.6,10), compMat);
-    group.add(tube);
-    const cap = new THREE.Mesh(new THREE.SphereGeometry(0.26,10,10), compMat);
-    cap.position.y = 0.4; group.add(cap);
-    const light = new THREE.PointLight(0xe8b96b, 0.7, 5);
-    group.add(light);
-    group.position.set(p.x, 1.0, p.z);
-    scene.add(group);
-    components.push({ group, x:p.x, z:p.z, baseY:1.0, alive:true });
+    const geo = new THREE.OctahedronGeometry(0.25, 0); // Cool floating crystal shape
+    const mesh = new THREE.Mesh(geo, compMat);
+    group.add(mesh);
+    const light = new THREE.PointLight(0xffaa00, 1, 4); group.add(light);
+    group.position.set(p.x, 1.2, p.z); scene.add(group);
+    components.push({ group, mesh, x:p.x, z:p.z, baseY:1.2, alive:true });
   });
 
-  // ============================================================
-  // ANOMALIES (glitch orbs) — Mission 2
-  // ============================================================
-  const anomalySpots = [
-    {x:4,z:6},{x:-8,z:2},{x:12,z:-6},{x:-11,z:-11.5},{x:2,z:-3}
-  ];
   const anomalies = [];
-  const anomMat = new THREE.MeshStandardMaterial({ color:0x3a1414, emissive:0xe2685f, emissiveIntensity:1.1, roughness:0.3 });
-  anomalySpots.forEach(p=>{
+  const anomMat = new THREE.MeshStandardMaterial({ color:0x000000, emissive:0xff3366, emissiveIntensity:2, wireframe:true });
+  [{x:4,z:7},{x:-7,z:3},{x:11,z:-5},{x:-12,z:-10},{x:3,z:-2}].forEach(p=>{
     const group = new THREE.Group();
-    const core = new THREE.Mesh(new THREE.IcosahedronGeometry(0.55,1), anomMat);
-    group.add(core);
-    const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTexture(0xe2685f), transparent:true, blending:THREE.AdditiveBlending }));
-    glow.scale.set(2.2,2.2,1); group.add(glow);
-    group.position.set(p.x, 1.9, p.z);
-    scene.add(group);
-    anomalies.push({ group, x:p.x, z:p.z, baseY:1.9, alive:true, lastDamage:0 });
+    const mesh = new THREE.Mesh(new THREE.IcosahedronGeometry(0.6, 1), anomMat);
+    group.add(mesh);
+    const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTexture(0xff3366), transparent:true, blending:THREE.AdditiveBlending }));
+    glow.scale.set(3,3,1); group.add(glow);
+    group.position.set(p.x, 1.5, p.z); scene.add(group);
+    anomalies.push({ group, mesh, x:p.x, z:p.z, baseY:1.5, alive:true });
   });
 
   // ============================================================
-  // NPCs
-  // ============================================================
-  function buildNPC(x,z, coatColor){
-    const group = new THREE.Group();
-    const coatMat = new THREE.MeshStandardMaterial({ color:coatColor, roughness:0.8 });
-    const body = new THREE.Mesh(new THREE.CylinderGeometry(0.36,0.42,1.3,10), coatMat);
-    body.position.y = 0.85; body.castShadow=true;
-    group.add(body);
-    const skinMat = new THREE.MeshStandardMaterial({ color:0xd9b08c, roughness:0.7 });
-    const head = new THREE.Mesh(new THREE.SphereGeometry(0.27,14,14), skinMat);
-    head.position.y = 1.68; head.castShadow=true;
-    group.add(head);
-    group.position.set(x,0,z);
-    scene.add(group);
-    obstacles.push({x,z,r:0.7});
-    return group;
-  }
-  const npcs = [
-    { group: buildNPC(9,4, 0xe9e9e0), name:'Rei', lines:[
-        'Kayaknya ada yang aneh di ruang belakang.',
-        'Kalau nemu tabung kuning kecil, itu komponennya.',
-        'Jangan deket-deket sama bola merah yang melayang itu.'
-      ], t:0 },
-    { group: buildNPC(-13,-1.5, 0xdedad0), name:'Souta', lines:[
-        'Perangkatnya butuh lima komponen biar nyala lagi.',
-        'Aku dengar dengungan aneh dari lorong tadi malam.',
-        'Coba pakai kalkulator kalau butuh hitung-hitungan cepat.'
-      ], t:0 }
-  ];
-
-  // ============================================================
-  // AMBIENT DUST
-  // ============================================================
-  const dustCount = 180;
-  const dustGeo = new THREE.BufferGeometry();
-  const dustPos = new Float32Array(dustCount*3);
-  for(let i=0;i<dustCount;i++){
-    dustPos[i*3] = rand(-ROOM_X,ROOM_X);
-    dustPos[i*3+1] = rand(0.3, ROOM_H-0.5);
-    dustPos[i*3+2] = rand(-ROOM_Z,ROOM_Z);
-  }
-  dustGeo.setAttribute('position', new THREE.BufferAttribute(dustPos,3));
-  const dustMat = new THREE.PointsMaterial({ size:0.045, color:0xffe4b0, transparent:true, opacity:0.3, map:glowTexture(0xffe4b0), blending:THREE.AdditiveBlending, depthWrite:false });
-  const dust = new THREE.Points(dustGeo, dustMat);
-  scene.add(dust);
-
-  // ============================================================
-  // MISSIONS STATE
-  // ============================================================
-  const missions = {
-    m1:{ done:false, progress:0, total:5 },
-    m2:{ done:false, progress:0, total:5 },
-    m3:{ done:false, progress:0, total:1 },
-  };
-  let allDoneShown = false;
-  let worldlineIndex = 0.192837;
-
-  function updateMissionUI(){
-    ['m1','m2','m3'].forEach(id=>{
-      const m = missions[id]; const el = document.getElementById(id);
-      const bar = document.getElementById(id+'bar');
-      el.querySelector('.count').textContent = m.progress+'/'+m.total;
-      bar.style.width = Math.min(100,(m.progress/m.total)*100)+'%';
-      el.classList.toggle('done', m.done);
-    });
-    document.getElementById('statM1').textContent = missions.m1.progress+'/5';
-    document.getElementById('statM2').textContent = missions.m2.progress+'/5';
-    document.getElementById('statM3').textContent = missions.m3.done ? 'Aktif' : 'Nonaktif';
-    document.getElementById('statWorldline').textContent = worldlineIndex.toFixed(6);
-    if(missions.m1.done && missions.m2.done && missions.m3.done && !allDoneShown){
-      allDoneShown = true; setTimeout(showWinScreen, 500);
-    }
-  }
-  function toast(msg, cls){
-    const wrap = document.getElementById('toastWrap');
-    const t = document.createElement('div');
-    t.className = 'toast' + (cls?(' '+cls):'');
-    t.textContent = msg;
-    wrap.appendChild(t);
-    setTimeout(()=>t.remove(), 3200);
-  }
-
-  // ============================================================
-  // AUDIO
+  // AUDIO (Web Audio API - Procedural)
   // ============================================================
   let actx = null;
   function ensureAudio(){
-    if(actx) return;
-    try{ actx = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){}
+    if(!actx) {
+        try{ actx = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){}
+    }
+    if(actx && actx.state === 'suspended') actx.resume();
   }
   function beep(freq,dur,type,gain){
     if(!actx) return;
     const osc=actx.createOscillator(), g=actx.createGain();
-    osc.type=type||'sine'; osc.frequency.value=freq; g.gain.value=gain||0.15;
+    osc.type=type||'sine'; osc.frequency.value=freq; g.gain.value=gain||0.1;
     osc.connect(g); g.connect(actx.destination); osc.start();
     g.gain.exponentialRampToValueAtTime(0.0001, actx.currentTime+dur);
     osc.stop(actx.currentTime+dur);
   }
-  function sfxCollect(){ beep(920,0.15,'sine',0.16); setTimeout(()=>beep(1380,0.18,'sine',0.12),90); }
-  function sfxHit(){ beep(160,0.14,'square',0.16); }
-  function sfxDamage(){ beep(110,0.2,'sawtooth',0.16); }
-  function sfxComplete(){ beep(660,0.15,'sine',0.15); setTimeout(()=>beep(880,0.15,'sine',0.15),120); setTimeout(()=>beep(1320,0.25,'sine',0.15),240); }
-  function sfxKey(){ beep(500,0.05,'square',0.06); }
+  function playThunder() {
+    if(!actx) return;
+    const bufferSize = actx.sampleRate * 2.0; // 2 seconds of noise
+    const buffer = actx.createBuffer(1, bufferSize, actx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) { data[i] = Math.random() * 2 - 1; }
+    
+    const noise = actx.createBufferSource(); noise.buffer = buffer;
+    const filter = actx.createBiquadFilter(); filter.type = 'lowpass'; filter.frequency.value = 400; // Deep rumble
+    const gain = actx.createGain(); 
+    gain.gain.setValueAtTime(1, actx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, actx.currentTime + 2);
+    
+    noise.connect(filter); filter.connect(gain); gain.connect(actx.destination);
+    noise.start();
+  }
+  function sfxCollect(){ beep(880,0.1,'sine',0.2); setTimeout(()=>beep(1760,0.3,'sine',0.2),100); }
+  function sfxComplete(){ beep(440,0.2,'square',0.1); setTimeout(()=>beep(660,0.2,'square',0.1),200); setTimeout(()=>beep(880,0.5,'square',0.1),400); }
 
   // ============================================================
-  // PLAYER
+  // PLAYER & GAME STATE
   // ============================================================
-  const player = { x:6, z:8, y:0, vy:0, grounded:true, yaw:Math.PI, pitch:0, health:100, radius:0.5, eyeHeight:1.65, speed:5.6, runSpeed:9.2 };
-  const spawn = { x:6, z:8 };
-
+  const player = { x:6, z:8, y:0, vy:0, grounded:true, yaw:Math.PI, pitch:0, radius:0.5, eyeHeight:1.7, speed:6, runSpeed:10 };
+  let gameState = 'menu'; // 'menu', 'cinematic', 'playing', 'win'
   const keys = {};
-  let gameStarted=false, paused=false, winShown=false, calcOpen=false, statusOpen=false;
 
-  document.addEventListener('keydown', e=>{
-    keys[e.code]=true;
-    if(!gameStarted) return;
-    if(e.code==='KeyC'){ toggleCalc(); }
-    if(e.code==='KeyV'){ toggleStatus(); }
-    if(e.code==='Escape'){
-      if(calcOpen){ closeCalc(); return; }
-      if(statusOpen){ closeStatus(); return; }
-      if(document.pointerLockElement===canvas){ document.exitPointerLock(); }
-      else if(!paused && !winShown){ pauseGame(); }
-    }
-  });
+  document.addEventListener('keydown', e=>{ keys[e.code]=true; });
   document.addEventListener('keyup', e=>{ keys[e.code]=false; });
 
   let pointerLocked = false;
-  const MOUSE_SENS = 0.0022;
+  const MOUSE_SENS = 0.002;
   document.addEventListener('mousemove', e=>{
-    if(!pointerLocked) return;
+    if(!pointerLocked || gameState !== 'playing') return;
     player.yaw -= e.movementX*MOUSE_SENS;
     player.pitch -= e.movementY*MOUSE_SENS;
     const lim = Math.PI/2-0.05;
     player.pitch = Math.max(-lim, Math.min(lim, player.pitch));
   });
-  function requestLock(){ canvas.requestPointerLock(); }
+
+  canvas.addEventListener('click', ()=>{
+    if(gameState === 'playing' && !pointerLocked) { canvas.requestPointerLock(); return; }
+    if(gameState === 'playing' && pointerLocked) interact();
+  });
   document.addEventListener('pointerlockchange', ()=>{
     pointerLocked = (document.pointerLockElement===canvas);
-    const hint = document.getElementById('hint');
-    if(pointerLocked){
-      hint.classList.add('hidden');
-      if(gameStarted && paused && !calcOpen && !statusOpen) resumeGame();
-    } else {
-      hint.classList.remove('hidden');
-      if(gameStarted && !paused && !winShown && !calcOpen && !statusOpen) pauseGame();
-    }
-  });
-  canvas.addEventListener('click', ()=>{
-    if(!gameStarted || paused || winShown || calcOpen || statusOpen) return;
-    if(!pointerLocked){ requestLock(); return; }
-    interact();
   });
 
+  const missions = { m1:{ progress:0, total:5 }, m2:{ progress:0, total:5 }, m3:{ done:false } };
+  function updateMissionUI(){
+    document.getElementById('m1').querySelector('.count').textContent = missions.m1.progress+'/5';
+    document.getElementById('m1bar').style.width = (missions.m1.progress/5*100)+'%';
+    document.getElementById('m2').querySelector('.count').textContent = missions.m2.progress+'/5';
+    document.getElementById('m2bar').style.width = (missions.m2.progress/5*100)+'%';
+    if(missions.m1.progress===5) document.getElementById('m1').classList.add('done');
+    if(missions.m2.progress===5) document.getElementById('m2').classList.add('done');
+    if(missions.m3.done){
+        document.getElementById('m3bar').style.width = '100%';
+        document.getElementById('m3').classList.add('done');
+        document.getElementById('m3').querySelector('.count').textContent = '1/1';
+    }
+  }
+  function toast(msg, cls){
+    const wrap = document.getElementById('toastWrap');
+    const t = document.createElement('div');
+    t.className = 'toast' + (cls?(' '+cls):''); t.textContent = msg;
+    wrap.appendChild(t); setTimeout(()=>t.remove(), 3400);
+  }
+
   // ============================================================
-  // INTERACTION
+  // GAME LOGIC
   // ============================================================
   const raycaster = new THREE.Raycaster();
   function interact(){
-    ensureAudio();
     raycaster.setFromCamera({x:0,y:0}, camera);
-
-    let bestNpc=null, bestNpcDist=Infinity;
-    npcs.forEach(n=>{
-      const d = raycaster.ray.distanceToPoint(n.group.position.clone().setY(1.2));
-      if(d<1.1){
-        const cd = camera.position.distanceTo(n.group.position);
-        if(cd<bestNpcDist && cd<7){ bestNpcDist=cd; bestNpc=n; }
-      }
-    });
-    if(bestNpc){
-      const line = bestNpc.lines[bestNpc.t % bestNpc.lines.length];
-      bestNpc.t++;
-      toast(bestNpc.name+': "'+line+'"', 'dialog');
-      return;
-    }
-
-    let bestAnom=null, bestAnomDist=Infinity;
     anomalies.forEach(a=>{
       if(!a.alive) return;
-      const d = raycaster.ray.distanceToPoint(a.group.position);
-      if(d<1.4){
-        const cd = camera.position.distanceTo(a.group.position);
-        if(cd<bestAnomDist){ bestAnomDist=cd; bestAnom=a; }
+      if(raycaster.ray.distanceToPoint(a.group.position) < 1.5 && camera.position.distanceTo(a.group.position) < 5){
+        a.alive=false; scene.remove(a.group); beep(200, 0.3, 'sawtooth', 0.2);
+        missions.m2.progress++; updateMissionUI();
+        toast('Glitch Dinetralisir ('+missions.m2.progress+'/5)', 'dialog');
+        if(missions.m2.progress===5) sfxComplete();
       }
     });
-    if(bestAnom && bestAnomDist<60){ stabilizeAnomaly(bestAnom); }
   }
 
-  function stabilizeAnomaly(a){
-    a.alive=false; scene.remove(a.group); sfxHit();
-    missions.m2.progress++;
-    worldlineIndex += 0.031 + Math.random()*0.01;
-    if(missions.m2.progress>=missions.m2.total){ missions.m2.done=true; toast('Misi selesai: Redakan Anomali'); sfxComplete(); }
-    else toast('Anomali diredakan ('+missions.m2.progress+'/'+missions.m2.total+')');
-    updateMissionUI();
-  }
-
-  // ============================================================
-  // COLLISION
-  // ============================================================
   function tryMove(nx,nz){
-    if(!isInsideWalkable(nx,nz)) return false;
-    for(const o of obstacles){
-      const dx=nx-o.x, dz=nz-o.z;
-      const minDist = o.r+player.radius;
-      if(dx*dx+dz*dz < minDist*minDist) return false;
+    if(nx>ROOM_X-0.5 || nx<-ROOM_X+0.5 || nz>ROOM_Z-0.5 || nz<-ROOM_Z+0.5) {
+        // Allow entering corridor
+        if(!(nx>=-12.5 && nx<=-9.5 && nz<-10)) return false; 
+    }
+    for(const o of obstacles) {
+      if(Math.hypot(nx-o.x, nz-o.z) < o.r+player.radius) return false;
     }
     return true;
   }
 
-  // ============================================================
-  // GAME LOOP
-  // ============================================================
-  let playTime = 0;
-  let machineWarned = false;
-  const clock = new THREE.Clock();
+  // Cinematic Intro Sequence
+  function startCinematic() {
+    gameState = 'cinematic';
+    document.getElementById('menu').classList.add('hidden');
+    document.getElementById('cinematicBars').classList.remove('hidden');
+    document.getElementById('skipCinematic').style.display = 'block';
+    
+    const startCam = { x: -10, y: 5, z: -12, yaw: Math.PI/4, pitch: -0.2 };
+    const endCam = { x: spawn.x, y: spawn.y + player.eyeHeight, z: spawn.z, yaw: spawn.yaw, pitch: 0 };
+    
+    camera.position.set(startCam.x, startCam.y, startCam.z);
+    camera.rotation.set(startCam.pitch, startCam.yaw, 0);
 
-  function updatePlayer(dt){
-    const forward = new THREE.Vector3(Math.sin(player.yaw),0,Math.cos(player.yaw));
-    const right = new THREE.Vector3(Math.sin(player.yaw+Math.PI/2),0,Math.cos(player.yaw+Math.PI/2));
-    let mx=0, mz=0;
-    if(keys['KeyW']){ mx-=forward.x; mz-=forward.z; }
-    if(keys['KeyS']){ mx+=forward.x; mz+=forward.z; }
-    if(keys['KeyA']){ mx-=right.x; mz-=right.z; }
-    if(keys['KeyD']){ mx+=right.x; mz+=right.z; }
-    const len = Math.hypot(mx,mz);
-    if(len>0){ mx/=len; mz/=len; }
-    const spd = (keys['ShiftLeft']||keys['ShiftRight']) ? player.runSpeed : player.speed;
-    const nx = player.x + mx*spd*dt;
-    const nz = player.z + mz*spd*dt;
-    if(tryMove(nx, player.z)) player.x = nx;
-    if(tryMove(player.x, nz)) player.z = nz;
-
-    if(keys['Space'] && player.grounded){ player.vy=5.6; player.grounded=false; }
-    player.vy -= 15.0*dt;
-    player.y += player.vy*dt;
-    if(player.y<=0){ player.y=0; player.vy=0; player.grounded=true; }
-
-    camera.position.set(player.x, player.y+player.eyeHeight, player.z);
-    camera.rotation.y = player.yaw;
-    camera.rotation.x = player.pitch;
+    new TWEEN.Tween(startCam)
+        .to(endCam, 6000) // 6 seconds intro
+        .easing(TWEEN.Easing.Quadratic.InOut)
+        .onUpdate(() => {
+            camera.position.set(startCam.x, startCam.y, startCam.z);
+            camera.rotation.set(startCam.pitch, startCam.yaw, 0);
+        })
+        .onComplete(endCinematic)
+        .start();
   }
 
-  function updateWorld(t,dt){
-    coreRef.mesh.rotation.y += dt*0.4;
-    coreRef.light.intensity = 1.4 + Math.sin(t*3)*0.4;
-    machineRings.forEach((r,i)=>{ r.rotation.z += dt*(0.3+i*0.15); });
+  function endCinematic() {
+    if(gameState === 'playing') return; // Already skipped
+    TWEEN.removeAll();
+    gameState = 'playing';
+    document.getElementById('cinematicBars').classList.remove('cinematic-active');
+    setTimeout(() => document.getElementById('cinematicBars').classList.add('hidden'), 1000);
+    document.getElementById('skipCinematic').style.display = 'none';
+    document.getElementById('hud').classList.remove('hidden');
+    document.getElementById('crosshair').classList.add('visible');
+    
+    player.x = spawn.x; player.z = spawn.z; player.yaw = spawn.yaw;
+    canvas.requestPointerLock();
+  }
+  document.getElementById('skipCinematic').addEventListener('click', endCinematic);
 
-    monitors.forEach(m=>{ m.timer += dt; if(m.timer>0.28){ m.timer=0; drawMonitor(m); } });
+  const spawn = { x:6, z:8, yaw: Math.PI };
+  document.getElementById('startBtn').addEventListener('click', ()=>{ ensureAudio(); startCinematic(); });
 
-    const arr = dustGeo.attributes.position.array;
-    for(let i=0;i<dustCount;i++){
-      arr[i*3+1] += Math.sin(t*0.5+i)*0.0012;
-      arr[i*3] += Math.cos(t*0.3+i)*0.001;
+  let thunderTimer = 0;
+  const clock = new THREE.Clock();
+
+  function animate(time){
+    requestAnimationFrame(animate);
+    TWEEN.update(time);
+    
+    const dt = Math.min(0.05, clock.getDelta());
+    const t = clock.elapsedTime;
+
+    // Weather Effects Updates
+    const positions = rainGeo.attributes.position.array;
+    for(let i=0; i<rainCount; i++){
+        positions[i*3+1] -= rainVel[i] * (dt*60); // Drop Y
+        if(positions[i*3+1] < -5) {
+            positions[i*3+1] = 25; // Reset to top
+        }
     }
-    dustGeo.attributes.position.needsUpdate = true;
+    rainGeo.attributes.position.needsUpdate = true;
 
-    components.forEach(c=>{
-      if(!c.alive) return;
-      c.group.rotation.y += dt*1.4;
-      c.group.position.y = c.baseY + Math.sin(t*1.6+c.x)*0.15;
-      if(Math.hypot(player.x-c.x, player.z-c.z) < 2.0){
-        c.alive=false; scene.remove(c.group); sfxCollect();
-        missions.m1.progress++;
-        worldlineIndex += 0.021 + Math.random()*0.008;
-        if(missions.m1.progress>=missions.m1.total){ missions.m1.done=true; toast('Misi selesai: Kumpulkan Komponen'); sfxComplete(); }
-        else toast('Komponen ditemukan ('+missions.m1.progress+'/'+missions.m1.total+')');
-        updateMissionUI();
-      }
+    // Random Lightning
+    thunderTimer -= dt;
+    if(thunderTimer <= 0) {
+        if(Math.random() < 0.1) {
+            lightningLight.intensity = 5; // Flash
+            setTimeout(() => { lightningLight.intensity = 0; }, 50);
+            setTimeout(() => { lightningLight.intensity = 3; }, 150);
+            setTimeout(() => { lightningLight.intensity = 0; }, 250);
+            
+            // Play thunder sound delayed based on distance (simulated)
+            setTimeout(playThunder, rand(500, 1500));
+        }
+        thunderTimer = rand(3, 10); // Next lightning in 3-10s
+    }
+
+    // Update Interactive Monitor
+    monitors.forEach(m => {
+        m.timer += dt;
+        if(m.timer > 0.1) {
+            const dist = Math.hypot(player.x - (-13), player.z - (-3));
+            drawMonitor(m, dist);
+            m.timer = 0;
+        }
     });
 
-    anomalies.forEach(a=>{
-      if(!a.alive) return;
-      a.group.rotation.y += dt*1.0;
-      a.group.rotation.x += dt*0.6;
-      a.group.position.y = a.baseY + Math.sin(t*1.3+a.x)*0.2;
-      const dist = Math.hypot(player.x-a.x, player.z-a.z);
-      if(dist < 3.2 && t-a.lastDamage>0.7){
-        a.lastDamage = t;
-        player.health = Math.max(0, player.health-6);
-        sfxDamage(); flashHit(); updateHealthUI();
-        if(player.health<=0) respawnPlayer();
-      }
+    // Update 3D Core Device
+    coreRef.mesh.rotation.x += dt * 0.5;
+    coreRef.mesh.rotation.y += dt * 0.8;
+    coreRef.rings.forEach(r => {
+        r.mesh.rotateOnAxis(r.axis, dt * r.speed);
     });
 
-    npcs.forEach((n,i)=>{
-      n.group.position.y = Math.sin(t*1.2+i)*0.03;
-      n.group.rotation.y = Math.sin(t*0.4+i)*0.25;
-    });
+    if(gameState === 'playing'){
+      // Movement
+      const forward = new THREE.Vector3(Math.sin(player.yaw),0,Math.cos(player.yaw));
+      const right = new THREE.Vector3(Math.sin(player.yaw+Math.PI/2),0,Math.cos(player.yaw+Math.PI/2));
+      let mx=0, mz=0;
+      if(keys['KeyW']){ mx-=forward.x; mz-=forward.z; }
+      if(keys['KeyS']){ mx+=forward.x; mz+=forward.z; }
+      if(keys['KeyA']){ mx-=right.x; mz-=right.z; }
+      if(keys['KeyD']){ mx+=right.x; mz+=right.z; }
+      
+      const len = Math.hypot(mx,mz);
+      if(len>0){ mx/=len; mz/=len; }
+      const spd = (keys['ShiftLeft']||keys['ShiftRight']) ? player.runSpeed : player.speed;
+      
+      const nx = player.x + mx*spd*dt;
+      const nz = player.z + mz*spd*dt;
+      if(tryMove(nx, player.z)) player.x = nx;
+      if(tryMove(player.x, nz)) player.z = nz;
 
-    if(!missions.m3.done){
-      const dist = Math.hypot(player.x-devicePos.x, player.z-devicePos.z);
-      if(dist < 3.6){
-        if(missions.m1.done && missions.m2.done){
-          missions.m3.progress=1; missions.m3.done=true;
-          worldlineIndex = 1.939213;
-          toast('Misi selesai: Perangkat Aktif!'); sfxComplete();
-          updateMissionUI();
-        } else if(!machineWarned){
-          machineWarned = true;
-          toast('Butuh komponen & anomali reda dulu sebelum perangkat bisa menyala.', 'warn');
+      camera.position.set(player.x, player.y+player.eyeHeight, player.z);
+      camera.rotation.y = player.yaw;
+      camera.rotation.x = player.pitch;
+
+      // Item Collection
+      components.forEach(c=>{
+        if(!c.alive) return;
+        c.mesh.rotation.y += dt*2;
+        c.group.position.y = c.baseY + Math.sin(t*3+c.x)*0.2;
+        if(Math.hypot(player.x-c.x, player.z-c.z) < 1.5){
+          c.alive=false; scene.remove(c.group); sfxCollect();
+          missions.m1.progress++; updateMissionUI();
+          toast('Isolator Diambil ('+missions.m1.progress+'/5)');
+          if(missions.m1.progress===5) sfxComplete();
+        }
+      });
+
+      // Anomaly Animation
+      anomalies.forEach(a=>{
+        if(!a.alive) return;
+        a.mesh.rotation.x += dt*1.5;
+        a.mesh.rotation.y += dt*2;
+        // Jitter effect
+        a.mesh.position.set(rand(-0.05,0.05), rand(-0.05,0.05), rand(-0.05,0.05));
+      });
+
+      // Win Condition check
+      if(!missions.m3.done && Math.hypot(player.x-devicePos.x, player.z-devicePos.z) < 3.5){
+        if(missions.m1.progress===5 && missions.m2.progress===5){
+          missions.m3.done = true; updateMissionUI(); sfxComplete();
+          coreRef.mesh.material.color.setHex(0x00ffaa); // Change color to green/safe
+          coreRef.mesh.material.emissive.setHex(0x00ffaa);
+          coreRef.light.color.setHex(0x00ffaa);
+          toast('REAKTOR STABIL. SIMULASI SELESAI.', 'dialog');
+          
+          setTimeout(()=>{
+            document.exitPointerLock();
+            gameState = 'win';
+            document.getElementById('winscreen').classList.remove('hidden');
+          }, 2000);
         }
       }
     }
-
-    if(player.health<100){ player.health = Math.min(100, player.health+3*dt); updateHealthUI(); }
-
-    playTime += dt;
-    const mm = Math.floor(playTime/60).toString().padStart(2,'0');
-    const ss = Math.floor(playTime%60).toString().padStart(2,'0');
-    document.getElementById('statTime').textContent = mm+':'+ss;
-  }
-
-  function flashHit(){
-    const v = document.getElementById('vignetteHit');
-    v.classList.add('hit');
-    setTimeout(()=>v.classList.remove('hit'), 200);
-  }
-  function respawnPlayer(){
-    player.x=spawn.x; player.z=spawn.z; player.y=0; player.health=60;
-    toast('Kesadaranmu goyah... kembali ke titik masuk', 'warn');
-    updateHealthUI();
-  }
-  function updateHealthUI(){
-    document.getElementById('healthFill').style.width = player.health+'%';
-    document.getElementById('statHealth').textContent = Math.round(player.health)+'%';
-  }
-
-  const radarCtx = document.getElementById('radar').getContext('2d');
-  const RADAR_SCALE = 130/60;
-  function drawRadar(){
-    radarCtx.clearRect(0,0,130,130);
-    radarCtx.fillStyle='rgba(60,48,35,0.35)';
-    radarCtx.beginPath(); radarCtx.arc(65,65,64,0,Math.PI*2); radarCtx.fill();
-    function toR(x,z){ return { rx:65+(x-player.x)*RADAR_SCALE*0+65+ (x)*0, ry:65 }; }
-    function pt(x,z){ return { rx: 65 + (x-player.x)*3.2, ry: 65 + (z-player.z)*3.2 }; }
-    components.forEach(c=>{ if(!c.alive) return; const p=pt(c.x,c.z); if(Math.hypot(p.rx-65,p.ry-65)<64){ radarCtx.fillStyle='#e8b96b'; radarCtx.beginPath(); radarCtx.arc(p.rx,p.ry,3,0,Math.PI*2); radarCtx.fill(); } });
-    anomalies.forEach(a=>{ if(!a.alive) return; const p=pt(a.x,a.z); if(Math.hypot(p.rx-65,p.ry-65)<64){ radarCtx.fillStyle='#e2685f'; radarCtx.beginPath(); radarCtx.arc(p.rx,p.ry,3,0,Math.PI*2); radarCtx.fill(); } });
-    { const p=pt(devicePos.x,devicePos.z); if(Math.hypot(p.rx-65,p.ry-65)<64){ radarCtx.fillStyle='#6fd0ff'; radarCtx.beginPath(); radarCtx.arc(p.rx,p.ry,4,0,Math.PI*2); radarCtx.fill(); } }
-    radarCtx.save(); radarCtx.translate(65,65); radarCtx.rotate(player.yaw);
-    radarCtx.fillStyle='#ffffff';
-    radarCtx.beginPath(); radarCtx.moveTo(0,-6); radarCtx.lineTo(4,5); radarCtx.lineTo(-4,5); radarCtx.closePath(); radarCtx.fill();
-    radarCtx.restore();
-  }
-
-  function animate(){
-    requestAnimationFrame(animate);
-    const dt = Math.min(0.05, clock.getDelta());
-    if(gameStarted && !paused && !winShown && !calcOpen && !statusOpen){
-      const t = clock.elapsedTime;
-      updatePlayer(dt);
-      updateWorld(t,dt);
-      drawRadar();
-    }
+    
     renderer.render(scene, camera);
   }
-  window.addEventListener('resize', ()=>{
-    camera.aspect = window.innerWidth/window.innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
-  });
-
-  // ============================================================
-  // CALCULATOR
-  // ============================================================
-  let calcExpr = '';
-  const calcScreen = document.getElementById('calcScreen');
-  const calcGrid = document.getElementById('calcGrid');
-  const calcKeys = ['7','8','9','÷','4','5','6','×','1','2','3','-','0','.','C','+','='];
-  calcKeys.forEach(k=>{
-    const btn = document.createElement('div');
-    btn.className = 'calcKey' + (['÷','×','-','+'].includes(k)?' op':'') + (k==='='?' eq':'') + (k==='C'?' clear':'');
-    btn.textContent = k;
-    btn.addEventListener('click', ()=> calcPress(k));
-    calcGrid.appendChild(btn);
-  });
-  function calcPress(k){
-    sfxKey();
-    if(k==='C'){ calcExpr=''; }
-    else if(k==='='){
-      try{
-        const safe = calcExpr.replace(/×/g,'*').replace(/÷/g,'/');
-        if(!/^[0-9+\-*/.\s]+$/.test(safe)) throw new Error('bad');
-        const result = Function('"use strict";return ('+safe+')')();
-        calcExpr = (Math.round(result*1e6)/1e6).toString();
-      }catch(e){ calcExpr = 'Error'; }
-    } else {
-      if(calcExpr==='Error') calcExpr='';
-      calcExpr += k;
-    }
-    calcScreen.textContent = calcExpr || '0';
-  }
-  document.addEventListener('keydown', e=>{
-    if(!calcOpen) return;
-    if(/^[0-9]$/.test(e.key)) calcPress(e.key);
-    else if(e.key==='.') calcPress('.');
-    else if(e.key==='+') calcPress('+');
-    else if(e.key==='-') calcPress('-');
-    else if(e.key==='*') calcPress('×');
-    else if(e.key==='/') calcPress('÷');
-    else if(e.key==='Enter'){ calcPress('='); }
-    else if(e.key==='Backspace'){ calcExpr = calcExpr.slice(0,-1); calcScreen.textContent = calcExpr||'0'; }
-  });
-
-  function toggleCalc(){ calcOpen ? closeCalc() : openCalc(); }
-  function openCalc(){
-    if(statusOpen) closeStatus();
-    calcOpen = true;
-    document.getElementById('calcModal').classList.remove('hidden');
-    if(document.pointerLockElement===canvas) document.exitPointerLock();
-  }
-  function closeCalc(){
-    calcOpen = false;
-    document.getElementById('calcModal').classList.add('hidden');
-    if(gameStarted && !paused && !winShown) requestLock();
-  }
-  document.getElementById('openCalcBtn').addEventListener('click', openCalc);
-  document.getElementById('closeCalcBtn').addEventListener('click', closeCalc);
-
-  // ============================================================
-  // STATUS MODAL
-  // ============================================================
-  function toggleStatus(){ statusOpen ? closeStatus() : openStatus(); }
-  function openStatus(){
-    if(calcOpen) closeCalc();
-    statusOpen = true;
-    updateMissionUI();
-    document.getElementById('statusModal').classList.remove('hidden');
-    if(document.pointerLockElement===canvas) document.exitPointerLock();
-  }
-  function closeStatus(){
-    statusOpen = false;
-    document.getElementById('statusModal').classList.add('hidden');
-    if(gameStarted && !paused && !winShown) requestLock();
-  }
-  document.getElementById('openStatusBtn').addEventListener('click', openStatus);
-  document.getElementById('closeStatusBtn').addEventListener('click', closeStatus);
-
-  // ============================================================
-  // MENU / PAUSE / WIN
-  // ============================================================
-  const menuEl = document.getElementById('menu');
-  const pauseEl = document.getElementById('pause');
-  const winEl = document.getElementById('winscreen');
-  const hudEl = document.getElementById('hud');
-
-  document.getElementById('startBtn').addEventListener('click', ()=>{
-    ensureAudio();
-    menuEl.classList.add('hidden');
-    hudEl.classList.remove('hidden');
-    gameStarted = true; paused = false;
-    player.x=spawn.x; player.z=spawn.z; player.y=0;
-    updateHealthUI(); updateMissionUI();
-    requestLock();
-  });
-  function pauseGame(){
-    paused = true;
-    pauseEl.classList.remove('hidden');
-    const total = missions.m1.progress+missions.m2.progress+missions.m3.progress;
-    document.getElementById('pauseSummary').textContent = 'Progres: '+total+' dari '+(missions.m1.total+missions.m2.total+missions.m3.total)+' tujuan tercapai.';
-  }
-  function resumeGame(){ paused = false; pauseEl.classList.add('hidden'); }
-  document.getElementById('resumeBtn').addEventListener('click', requestLock);
-  document.getElementById('restartBtn').addEventListener('click', ()=>location.reload());
-  function showWinScreen(){
-    winShown = true;
-    if(document.pointerLockElement===canvas) document.exitPointerLock();
-    winEl.classList.remove('hidden');
-  }
-  document.getElementById('playAgainBtn').addEventListener('click', ()=>location.reload());
 
   // ============================================================
   // BOOT
   // ============================================================
+  window.addEventListener('resize', ()=>{
+    camera.aspect = window.innerWidth/window.innerHeight; camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  });
+  
+  // Remove loading screen
   document.getElementById('loading').classList.add('hidden');
-  menuEl.classList.remove('hidden');
+  document.getElementById('menu').classList.remove('hidden');
+  
   animate();
 
 })();
