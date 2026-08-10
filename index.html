@@ -3,220 +3,252 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Hutan Kristal — Petualangan Dunia Terbuka</title>
+<title>Lab Garis Waktu — RX-7</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=VT323&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <style>
   :root{
-    --bg-dark:#071410;
-    --panel: rgba(8,28,22,0.86);
-    --panel-border: rgba(55,232,201,0.35);
-    --accent-cyan:#37e8c9;
-    --accent-cyan-dim:#1c8f7c;
-    --accent-amber:#ffb457;
-    --accent-red:#ff5c5c;
-    --text-light:#d7f5ec;
-    --text-dim:#7fa89c;
+    --bg:#040506;
+    --panel: rgba(6,14,10,0.88);
+    --panel-border: rgba(57,255,106,0.35);
+    --green: #39ff6a;
+    --green-dim:#1c8f3c;
+    --amber:#ffb200;
+    --red:#ff3b3b;
+    --cyan:#28e0ff;
+    --text:#d6ffe0;
+    --dim:#6f9782;
   }
   *{box-sizing:border-box; margin:0; padding:0;}
-  html,body{ width:100%; height:100%; overflow:hidden; background:var(--bg-dark); font-family:'Rajdhani',sans-serif; color:var(--text-light); }
+  html,body{ width:100%; height:100%; overflow:hidden; background:var(--bg); font-family:'Rajdhani',sans-serif; color:var(--text); }
   #game{ position:fixed; inset:0; display:block; }
-
   .hidden{ display:none !important; }
+  .mono{ font-family:'VT323', monospace; }
 
-  /* ---------- Overlays (menu / pause / win) ---------- */
+  /* ---------------- CRT overlay effects ---------------- */
+  #crtOverlay{
+    position:fixed; inset:0; z-index:15; pointer-events:none; mix-blend-mode:normal;
+  }
+  #crtOverlay .scanlines{
+    position:absolute; inset:0;
+    background: repeating-linear-gradient(0deg, rgba(0,0,0,0.16) 0px, rgba(0,0,0,0.16) 1px, transparent 2px, transparent 3px);
+    opacity:0.5;
+  }
+  #crtOverlay .vignette{
+    position:absolute; inset:0;
+    box-shadow: inset 0 0 220px 60px rgba(0,0,0,0.75);
+  }
+  #crtOverlay .flicker{
+    position:absolute; inset:0; background:rgba(57,255,106,0.02);
+    animation: flick 6s infinite;
+  }
+  @keyframes flick{ 0%,97%,100%{opacity:0;} 98%{opacity:1;} 99%{opacity:0.2;} }
+
+  /* ---------------- Overlays ---------------- */
   .overlay{
-    position:fixed; inset:0; z-index:20;
+    position:fixed; inset:0; z-index:30;
     display:flex; flex-direction:column; align-items:center; justify-content:center;
-    background: radial-gradient(ellipse at center, rgba(10,40,32,0.92) 0%, rgba(3,12,9,0.97) 75%);
+    background: radial-gradient(ellipse at center, rgba(6,20,12,0.95) 0%, rgba(2,6,4,0.98) 78%);
     text-align:center; padding:24px;
   }
-  .eyebrow{
-    font-size:13px; letter-spacing:6px; text-transform:uppercase;
-    color: var(--accent-cyan); opacity:0.85; margin-bottom:14px; font-weight:600;
-  }
+  .eyebrow{ font-size:13px; letter-spacing:6px; text-transform:uppercase; color:var(--green); opacity:0.85; margin-bottom:14px; font-weight:600; }
   .title-main{
-    font-family:'Cinzel', serif; font-weight:700;
-    font-size: clamp(38px, 7vw, 74px);
-    color: var(--text-light);
-    text-shadow: 0 0 24px rgba(55,232,201,0.45), 0 0 4px rgba(0,0,0,0.6);
-    letter-spacing: 2px;
-    margin-bottom: 10px;
+    font-family:'Orbitron', sans-serif; font-weight:900;
+    font-size: clamp(30px, 6vw, 58px); color:var(--text);
+    text-shadow: 0 0 24px rgba(57,255,106,0.5), 0 0 4px rgba(0,0,0,0.6);
+    letter-spacing: 2px; margin-bottom: 10px;
   }
-  .title-main span{ color:var(--accent-cyan); }
-  .subtitle{ font-size:18px; color:var(--text-dim); margin-bottom:36px; font-weight:500; letter-spacing:1px;}
+  .title-main span{ color:var(--green); }
+  .subtitle{ font-size:17px; color:var(--dim); margin-bottom:34px; font-weight:500; max-width:560px; }
 
-  .rules{
-    display:grid; grid-template-columns: repeat(3, minmax(150px,180px)); gap:14px;
-    margin-bottom:38px;
-  }
-  .rule{
-    background: var(--panel); border:1px solid var(--panel-border); border-radius:10px;
-    padding:14px 10px; font-size:15px;
-  }
-  .rule b{ display:block; color:var(--accent-cyan); font-size:20px; margin-bottom:4px; font-family:'Cinzel',serif; }
+  .rules{ display:grid; grid-template-columns: repeat(3, minmax(140px,170px)); gap:12px; margin-bottom:34px; }
+  .rule{ background:var(--panel); border:1px solid var(--panel-border); border-radius:10px; padding:12px 8px; font-size:14px; }
+  .rule b{ display:block; color:var(--green); font-size:18px; margin-bottom:4px; font-family:'Orbitron',sans-serif; }
 
   .btn{
-    font-family:'Rajdhani',sans-serif; font-weight:700; letter-spacing:3px; text-transform:uppercase;
-    font-size:17px; color:#04231c; background: linear-gradient(180deg, var(--accent-cyan), var(--accent-cyan-dim));
-    border:none; border-radius:8px; padding:16px 46px; cursor:pointer;
-    box-shadow: 0 0 30px rgba(55,232,201,0.35), inset 0 -3px 0 rgba(0,0,0,0.25);
+    font-family:'Rajdhani',sans-serif; font-weight:700; letter-spacing:3px; text-transform:uppercase; font-size:16px;
+    color:#042a0f; background: linear-gradient(180deg, var(--green), var(--green-dim));
+    border:none; border-radius:8px; padding:15px 42px; cursor:pointer;
+    box-shadow: 0 0 30px rgba(57,255,106,0.35), inset 0 -3px 0 rgba(0,0,0,0.25);
     transition: transform 0.15s ease, box-shadow 0.15s ease;
   }
-  .btn:hover{ transform:translateY(-2px); box-shadow: 0 0 40px rgba(55,232,201,0.55), inset 0 -3px 0 rgba(0,0,0,0.25); }
-  .btn:active{ transform:translateY(1px); }
-  .btn.secondary{
-    background:transparent; color:var(--text-light); border:1px solid var(--panel-border); box-shadow:none; margin-top:14px;
-  }
-  .btn.secondary:hover{ border-color:var(--accent-cyan); color:var(--accent-cyan); }
+  .btn:hover{ transform:translateY(-2px); box-shadow: 0 0 40px rgba(57,255,106,0.55), inset 0 -3px 0 rgba(0,0,0,0.25); }
+  .btn.secondary{ background:transparent; color:var(--text); border:1px solid var(--panel-border); box-shadow:none; margin-top:12px; }
+  .btn.secondary:hover{ border-color:var(--green); color:var(--green); }
 
-  .win-icon{ font-size:52px; margin-bottom:18px; }
-
-  /* ---------- HUD ---------- */
-  #hud{ position:fixed; inset:0; z-index:10; pointer-events:none; font-family:'Rajdhani',sans-serif; }
-
-  #crosshair{
-    position:absolute; top:50%; left:50%; width:22px; height:22px; transform:translate(-50%,-50%);
-  }
-  #crosshair::before, #crosshair::after{
-    content:''; position:absolute; background:var(--accent-cyan); opacity:0.85;
-  }
+  /* ---------------- HUD ---------------- */
+  #hud{ position:fixed; inset:0; z-index:10; pointer-events:none; }
+  #crosshair{ position:absolute; top:50%; left:50%; width:20px; height:20px; transform:translate(-50%,-50%); }
+  #crosshair::before, #crosshair::after{ content:''; position:absolute; background:var(--green); opacity:0.85; }
   #crosshair::before{ top:50%; left:0; width:100%; height:2px; transform:translateY(-50%); }
   #crosshair::after{ left:50%; top:0; height:100%; width:2px; transform:translateX(-50%); }
 
   #missionPanel{
-    position:absolute; top:22px; left:22px; width:290px;
-    background:var(--panel); border:1px solid var(--panel-border); border-radius:12px;
-    padding:16px 18px; backdrop-filter: blur(4px);
+    position:absolute; top:20px; left:20px; width:280px;
+    background:var(--panel); border:1px solid var(--panel-border); border-radius:10px; padding:14px 16px;
   }
-  #missionPanel h3{
-    font-family:'Cinzel',serif; font-size:15px; letter-spacing:2px; color:var(--accent-cyan);
-    text-transform:uppercase; margin-bottom:12px; border-bottom:1px solid var(--panel-border); padding-bottom:8px;
-  }
-  .mission-item{ margin-bottom:12px; }
-  .mission-item:last-child{ margin-bottom:0; }
-  .mission-name{ font-size:15px; font-weight:600; display:flex; justify-content:space-between; }
-  .mission-name .count{ color:var(--accent-amber); font-weight:700; }
-  .mission-item.done .mission-name{ color:var(--accent-cyan); text-decoration: line-through; opacity:0.65; }
-  .bar-track{ height:6px; border-radius:4px; background:rgba(255,255,255,0.08); margin-top:5px; overflow:hidden; }
-  .bar-fill{ height:100%; background:linear-gradient(90deg, var(--accent-cyan-dim), var(--accent-cyan)); width:0%; transition:width 0.3s ease; }
+  #missionPanel h3{ font-family:'Orbitron',sans-serif; font-size:13px; letter-spacing:2px; color:var(--green); text-transform:uppercase; margin-bottom:10px; border-bottom:1px solid var(--panel-border); padding-bottom:7px; }
+  .mission-item{ margin-bottom:10px; } .mission-item:last-child{ margin-bottom:0; }
+  .mission-name{ font-size:14px; font-weight:600; display:flex; justify-content:space-between; }
+  .mission-name .count{ color:var(--amber); font-weight:700; }
+  .mission-item.done .mission-name{ color:var(--green); text-decoration:line-through; opacity:0.65; }
+  .bar-track{ height:5px; border-radius:3px; background:rgba(255,255,255,0.08); margin-top:4px; overflow:hidden; }
+  .bar-fill{ height:100%; background:linear-gradient(90deg, var(--green-dim), var(--green)); width:0%; transition:width 0.3s ease; }
 
-  #minimapWrap{
-    position:absolute; top:22px; right:22px; width:150px; height:150px;
-    border-radius:50%; border:2px solid var(--panel-border); overflow:hidden;
-    background:rgba(8,28,22,0.75); box-shadow:0 0 20px rgba(0,0,0,0.4);
+  #radarWrap{
+    position:absolute; top:20px; right:20px; width:140px; height:140px; border-radius:50%;
+    border:2px solid var(--panel-border); overflow:hidden; background:rgba(6,14,10,0.75); box-shadow:0 0 20px rgba(0,0,0,0.4);
   }
 
-  #healthWrap{
-    position:absolute; bottom:26px; left:22px; width:260px;
-  }
-  #healthWrap .label{ font-size:13px; letter-spacing:2px; text-transform:uppercase; color:var(--text-dim); margin-bottom:5px; }
-  #healthTrack{ height:14px; border-radius:7px; background:rgba(255,255,255,0.08); border:1px solid var(--panel-border); overflow:hidden; }
-  #healthFill{ height:100%; width:100%; background:linear-gradient(90deg,#ff5c5c,#ffb457); transition:width 0.25s ease; }
+  #healthWrap{ position:absolute; bottom:24px; left:20px; width:240px; }
+  #healthWrap .label{ font-size:12px; letter-spacing:2px; text-transform:uppercase; color:var(--dim); margin-bottom:4px; }
+  #healthTrack{ height:13px; border-radius:7px; background:rgba(255,255,255,0.08); border:1px solid var(--panel-border); overflow:hidden; }
+  #healthFill{ height:100%; width:100%; background:linear-gradient(90deg,#ff3b3b,#ffb200); transition:width 0.25s ease; }
 
-  #hint{
-    position:absolute; bottom:26px; right:22px; font-size:14px; color:var(--text-dim);
-    background:var(--panel); border:1px solid var(--panel-border); border-radius:8px; padding:8px 14px;
-  }
+  #hint{ position:absolute; bottom:24px; left:50%; transform:translateX(-50%); font-size:13px; color:var(--dim); background:var(--panel); border:1px solid var(--panel-border); border-radius:8px; padding:7px 14px; }
 
-  #toastWrap{
-    position:absolute; bottom:100px; left:50%; transform:translateX(-50%);
-    display:flex; flex-direction:column; align-items:center; gap:8px; width:min(90vw,520px);
+  #toolButtons{ position:absolute; bottom:24px; right:20px; display:flex; gap:10px; pointer-events:auto; }
+  .toolBtn{
+    background:var(--panel); border:1px solid var(--panel-border); border-radius:8px; color:var(--text);
+    font-family:'Rajdhani',sans-serif; font-weight:600; font-size:13px; padding:10px 14px; cursor:pointer; text-align:center;
   }
+  .toolBtn b{ display:block; font-family:'Orbitron',sans-serif; color:var(--cyan); font-size:15px; }
+  .toolBtn:hover{ border-color:var(--green); }
+
+  #toastWrap{ position:absolute; bottom:96px; left:50%; transform:translateX(-50%); display:flex; flex-direction:column; align-items:center; gap:8px; width:min(90vw,540px); }
   .toast{
-    background:var(--panel); border:1px solid var(--accent-cyan); border-radius:8px;
-    padding:10px 20px; font-size:16px; font-weight:600; color:var(--text-light);
-    animation: toastIn 0.25s ease, toastOut 0.4s ease 2.6s forwards;
-    text-align:center;
+    background:var(--panel); border:1px solid var(--green); border-radius:8px; padding:9px 18px; font-size:15px; font-weight:600;
+    animation: toastIn 0.25s ease, toastOut 0.4s ease 2.7s forwards; text-align:center;
   }
+  .toast.dialog{ border-color:var(--cyan); }
+  .toast.warn{ border-color:var(--red); }
   @keyframes toastIn{ from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:translateY(0);} }
   @keyframes toastOut{ to{opacity:0; transform:translateY(-10px);} }
 
-  #vignette{
-    position:absolute; inset:0; pointer-events:none;
-    box-shadow: inset 0 0 0 0 rgba(255,0,0,0);
-    transition: box-shadow 0.2s ease;
-  }
-  #vignette.hit{ box-shadow: inset 0 0 160px 40px rgba(255,50,50,0.55); }
+  #vignetteHit{ position:absolute; inset:0; pointer-events:none; box-shadow: inset 0 0 0 0 rgba(255,0,0,0); transition: box-shadow 0.2s ease; }
+  #vignetteHit.hit{ box-shadow: inset 0 0 160px 40px rgba(255,50,50,0.5); }
 
-  #loading{
-    position:fixed; inset:0; z-index:30; display:flex; align-items:center; justify-content:center;
-    background:var(--bg-dark); color:var(--accent-cyan); font-family:'Cinzel',serif; letter-spacing:3px; font-size:20px;
+  /* ---------------- Calculator modal ---------------- */
+  .modal{
+    position:fixed; inset:0; z-index:40; display:flex; align-items:center; justify-content:center;
+    background:rgba(2,6,4,0.82);
   }
+  .modalBox{
+    background:linear-gradient(180deg, rgba(10,26,16,0.98), rgba(4,10,7,0.98));
+    border:1px solid var(--panel-border); border-radius:14px; padding:22px; width:min(92vw,340px);
+    box-shadow:0 0 50px rgba(57,255,106,0.2);
+  }
+  .modalTitle{ font-family:'Orbitron',sans-serif; font-size:15px; letter-spacing:2px; color:var(--green); text-transform:uppercase; margin-bottom:14px; text-align:center; }
+  #calcScreen{
+    background:#01120a; border:1px solid var(--panel-border); border-radius:8px; padding:14px;
+    font-family:'VT323',monospace; font-size:38px; color:var(--green); text-align:right; margin-bottom:14px;
+    min-height:52px; overflow:hidden; text-shadow:0 0 10px rgba(57,255,106,0.6); letter-spacing:1px;
+  }
+  #calcGrid{ display:grid; grid-template-columns: repeat(4,1fr); gap:8px; }
+  .calcKey{
+    padding:14px 0; border-radius:8px; border:1px solid var(--panel-border); background:rgba(255,255,255,0.03);
+    color:var(--text); font-family:'Rajdhani',sans-serif; font-weight:700; font-size:18px; cursor:pointer;
+  }
+  .calcKey:hover{ background:rgba(57,255,106,0.12); border-color:var(--green); }
+  .calcKey.op{ color:var(--amber); }
+  .calcKey.eq{ background:linear-gradient(180deg, var(--green), var(--green-dim)); color:#042a0f; grid-column: span 2; }
+  .calcKey.clear{ color:var(--red); }
+  .modalClose{ margin-top:16px; width:100%; }
+
+  /* ---------------- Status modal ---------------- */
+  .statRow{ display:flex; justify-content:space-between; align-items:center; padding:9px 0; border-bottom:1px dashed rgba(255,255,255,0.08); font-size:15px; }
+  .statRow:last-child{ border-bottom:none; }
+  .statRow .val{ font-family:'VT323',monospace; font-size:20px; color:var(--cyan); }
+  .statRow .val.green{ color:var(--green); }
+  .statRow .val.amber{ color:var(--amber); }
+  #statModalBox{ width:min(92vw,380px); }
+
+  #loading{ position:fixed; inset:0; z-index:50; display:flex; align-items:center; justify-content:center; background:var(--bg); color:var(--green); font-family:'Orbitron',sans-serif; letter-spacing:3px; font-size:18px; }
 </style>
 </head>
 <body>
 
-<div id="loading">MEMUAT DUNIA...</div>
-
+<div id="loading">MENGKALIBRASI GARIS WAKTU...</div>
 <canvas id="game"></canvas>
+<div id="crtOverlay"><div class="scanlines"></div><div class="vignette"></div><div class="flicker"></div></div>
 
 <!-- MAIN MENU -->
 <div id="menu" class="overlay hidden">
-  <div class="eyebrow">Petualangan Orang Pertama · Dunia Terbuka</div>
-  <div class="title-main">HUTAN <span>KRISTAL</span></div>
-  <div class="subtitle">Jelajahi reruntuhan hutan purba, kumpulkan kristal, dan hadapi para penjaga batu.</div>
+  <div class="eyebrow">Petualangan Sci-Fi Orang Pertama</div>
+  <div class="title-main">LAB GARIS <span>WAKTU</span></div>
+  <div class="subtitle">Markas rahasia RX-7 sedang kacau — anomali temporal bocor dari mesin percobaan. Kumpulkan komponen, stabilkan anomali, lalu nyalakan kembali mesin waktu sebelum garis waktu ini menyimpang lebih jauh.</div>
   <div class="rules">
     <div class="rule"><b>WASD</b>Bergerak</div>
     <div class="rule"><b>Mouse</b>Lihat sekeliling</div>
-    <div class="rule"><b>Klik Kiri</b>Serang</div>
+    <div class="rule"><b>Klik Kiri</b>Interaksi</div>
     <div class="rule"><b>Spasi</b>Lompat</div>
-    <div class="rule"><b>Shift</b>Berlari</div>
-    <div class="rule"><b>Esc</b>Jeda</div>
+    <div class="rule"><b>C</b>Kalkulator</div>
+    <div class="rule"><b>V</b>Status</div>
   </div>
-  <button class="btn" id="startBtn">Mulai Petualangan</button>
+  <button class="btn" id="startBtn">Masuk Laboratorium</button>
 </div>
 
-<!-- PAUSE MENU -->
+<!-- PAUSE -->
 <div id="pause" class="overlay hidden">
-  <div class="eyebrow">Dijeda</div>
-  <div class="title-main" style="font-size:44px;">Ambil Napas</div>
-  <div class="subtitle" id="pauseSummary">Progres misi tersimpan.</div>
+  <div class="eyebrow">Simulasi Dijeda</div>
+  <div class="title-main" style="font-size:38px;">Garis Waktu Membeku</div>
+  <div class="subtitle" id="pauseSummary">Progres tersimpan.</div>
   <button class="btn" id="resumeBtn">Lanjutkan</button>
   <button class="btn secondary" id="restartBtn">Mulai Ulang</button>
 </div>
 
-<!-- WIN SCREEN -->
+<!-- WIN -->
 <div id="winscreen" class="overlay hidden">
-  <div class="win-icon">💎</div>
-  <div class="eyebrow">Hutan Kristal Telah Tenang Kembali</div>
-  <div class="title-main">SEMUA MISI <span>SELESAI</span></div>
-  <div class="subtitle">Kau telah mengumpulkan seluruh kristal, menaklukkan para penjaga, dan menemukan menara purba.</div>
+  <div class="eyebrow">Konvergensi Tercapai</div>
+  <div class="title-main">MESIN WAKTU <span>AKTIF</span></div>
+  <div class="subtitle">Semua komponen terpasang, anomali distabilkan, dan mesin waktu kembali menyala. Garis waktu ini aman... untuk sekarang.</div>
   <button class="btn" id="playAgainBtn">Main Lagi</button>
 </div>
 
 <!-- HUD -->
 <div id="hud" class="hidden">
   <div id="crosshair"></div>
-
   <div id="missionPanel">
-    <h3>Misi Aktif</h3>
-    <div class="mission-item" id="m1">
-      <div class="mission-name"><span>Kumpulkan Kristal</span><span class="count">0/5</span></div>
-      <div class="bar-track"><div class="bar-fill" id="m1bar"></div></div>
-    </div>
-    <div class="mission-item" id="m2">
-      <div class="mission-name"><span>Kalahkan Penjaga Batu</span><span class="count">0/5</span></div>
-      <div class="bar-track"><div class="bar-fill" id="m2bar"></div></div>
-    </div>
-    <div class="mission-item" id="m3">
-      <div class="mission-name"><span>Temukan Menara Purba</span><span class="count">0/1</span></div>
-      <div class="bar-track"><div class="bar-fill" id="m3bar"></div></div>
-    </div>
+    <h3>Log Misi</h3>
+    <div class="mission-item" id="m1"><div class="mission-name"><span>Kumpulkan Komponen</span><span class="count">0/5</span></div><div class="bar-track"><div class="bar-fill" id="m1bar"></div></div></div>
+    <div class="mission-item" id="m2"><div class="mission-name"><span>Stabilkan Anomali</span><span class="count">0/5</span></div><div class="bar-track"><div class="bar-fill" id="m2bar"></div></div></div>
+    <div class="mission-item" id="m3"><div class="mission-name"><span>Nyalakan Mesin Waktu</span><span class="count">0/1</span></div><div class="bar-track"><div class="bar-fill" id="m3bar"></div></div></div>
   </div>
-
-  <div id="minimapWrap"><canvas id="minimap" width="150" height="150"></canvas></div>
-
-  <div id="healthWrap">
-    <div class="label">Vitalitas</div>
-    <div id="healthTrack"><div id="healthFill"></div></div>
-  </div>
-
+  <div id="radarWrap"><canvas id="radar" width="140" height="140"></canvas></div>
+  <div id="healthWrap"><div class="label">Vitalitas</div><div id="healthTrack"><div id="healthFill"></div></div></div>
   <div id="hint">Klik untuk mengunci kursor</div>
-
+  <div id="toolButtons">
+    <div class="toolBtn" id="openCalcBtn"><b>🖩</b>Kalkulator (C)</div>
+    <div class="toolBtn" id="openStatusBtn"><b>📟</b>Status (V)</div>
+  </div>
   <div id="toastWrap"></div>
-  <div id="vignette"></div>
+  <div id="vignetteHit"></div>
+</div>
+
+<!-- CALCULATOR MODAL -->
+<div id="calcModal" class="modal hidden">
+  <div class="modalBox">
+    <div class="modalTitle">Kalkulator Divergensi</div>
+    <div id="calcScreen" class="mono">0</div>
+    <div id="calcGrid"></div>
+    <button class="btn secondary modalClose" id="closeCalcBtn">Tutup (Esc)</button>
+  </div>
+</div>
+
+<!-- STATUS MODAL -->
+<div id="statusModal" class="modal hidden">
+  <div class="modalBox" id="statModalBox">
+    <div class="modalTitle">Status Peneliti</div>
+    <div class="statRow"><span>Kode Nama</span><span class="val">RX-7</span></div>
+    <div class="statRow"><span>Waktu Bermain</span><span class="val" id="statTime">00:00</span></div>
+    <div class="statRow"><span>Indeks Garis Waktu</span><span class="val amber" id="statWorldline">0.192837</span></div>
+    <div class="statRow"><span>Vitalitas</span><span class="val green" id="statHealth">100%</span></div>
+    <div class="statRow"><span>Komponen Terkumpul</span><span class="val" id="statM1">0/5</span></div>
+    <div class="statRow"><span>Anomali Distabilkan</span><span class="val" id="statM2">0/5</span></div>
+    <div class="statRow"><span>Status Mesin Waktu</span><span class="val" id="statM3">Nonaktif</span></div>
+    <button class="btn secondary modalClose" id="closeStatusBtn">Tutup (Esc)</button>
+  </div>
 </div>
 
 <script>
@@ -224,317 +256,534 @@
   "use strict";
 
   // ============================================================
-  // SETUP
+  // RENDERER / SCENE
   // ============================================================
   const canvas = document.getElementById('game');
   const renderer = new THREE.WebGLRenderer({ canvas, antialias:true });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
   renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.15;
 
   const scene = new THREE.Scene();
-  const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 500);
+  const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 400);
   camera.rotation.order = 'YXZ';
+  scene.background = new THREE.Color(0x030604);
+  scene.fog = new THREE.Fog(0x030604, 22, 90);
 
-  // sky gradient
-  function makeSkyTexture(){
-    const c = document.createElement('canvas'); c.width=4; c.height=512;
-    const ctx = c.getContext('2d');
-    const g = ctx.createLinearGradient(0,0,0,512);
-    g.addColorStop(0,'#08211c');
-    g.addColorStop(0.55,'#123f38');
-    g.addColorStop(1,'#2c6e5f');
-    ctx.fillStyle = g; ctx.fillRect(0,0,4,512);
-    return new THREE.CanvasTexture(c);
-  }
-  scene.background = makeSkyTexture();
-  scene.fog = new THREE.Fog(0x1f5c4f, 35, 170);
-
-  // lights
-  const ambient = new THREE.AmbientLight(0x8fd6c4, 0.55);
+  const ambient = new THREE.AmbientLight(0x2a4a3a, 0.55);
   scene.add(ambient);
-  const sun = new THREE.DirectionalLight(0xfff2d0, 0.9);
-  sun.position.set(60, 90, 40);
-  scene.add(sun);
-  const fillLight = new THREE.HemisphereLight(0x2c6e5f, 0x0a1a14, 0.5);
-  scene.add(fillLight);
-
-  // ground
-  const groundSize = 260;
-  const groundGeo = new THREE.PlaneGeometry(groundSize, groundSize, 40, 40);
-  groundGeo.rotateX(-Math.PI/2);
-  // subtle height noise
-  const posAttr = groundGeo.attributes.position;
-  for(let i=0;i<posAttr.count;i++){
-    const x = posAttr.getX(i), z = posAttr.getZ(i);
-    const h = Math.sin(x*0.05)*0.6 + Math.cos(z*0.06)*0.6;
-    posAttr.setY(i, h);
-  }
-  groundGeo.computeVertexNormals();
-  const groundMat = new THREE.MeshStandardMaterial({ color:0x1c4a3c, roughness:1, metalness:0 });
-  const ground = new THREE.Mesh(groundGeo, groundMat);
-  ground.receiveShadow = false;
-  scene.add(ground);
-
-  function groundHeightAt(x,z){
-    return Math.sin(x*0.05)*0.6 + Math.cos(z*0.06)*0.6;
-  }
+  const overheadLight = new THREE.PointLight(0xbfffd0, 0.9, 60);
+  overheadLight.position.set(0, 10, 0);
+  overheadLight.castShadow = true;
+  scene.add(overheadLight);
+  const rimLight = new THREE.DirectionalLight(0x28e0ff, 0.35);
+  rimLight.position.set(-20, 15, -10);
+  scene.add(rimLight);
 
   // ============================================================
-  // WORLD OBJECTS
+  // ROOM (walls / floor / ceiling)
   // ============================================================
-  const obstacles = []; // {x,z,r}
-  const BOUND = 118;
+  const ROOM_X = 30, ROOM_Z = 20, ROOM_H = 12;
+
+  function canvasTexture(draw, w, h, repeatX, repeatZ){
+    const c = document.createElement('canvas'); c.width=w; c.height=h;
+    const ctx = c.getContext('2d');
+    draw(ctx, w, h);
+    const tex = new THREE.CanvasTexture(c);
+    tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+    if(repeatX) tex.repeat.set(repeatX, repeatZ||repeatX);
+    return tex;
+  }
+
+  const floorTex = canvasTexture((ctx,w,h)=>{
+    ctx.fillStyle = '#151a17'; ctx.fillRect(0,0,w,h);
+    for(let i=0;i<40;i++){
+      ctx.fillStyle = 'rgba(255,255,255,'+(Math.random()*0.03)+')';
+      ctx.fillRect(Math.random()*w, Math.random()*h, Math.random()*40+10, Math.random()*40+10);
+    }
+    ctx.strokeStyle='rgba(57,255,106,0.06)'; ctx.lineWidth=2;
+    for(let i=0;i<w;i+=64){ ctx.beginPath(); ctx.moveTo(i,0); ctx.lineTo(i,h); ctx.stroke(); }
+  }, 256,256, 10,7);
+  const floorMat = new THREE.MeshStandardMaterial({ map: floorTex, roughness:0.9, metalness:0.05 });
+  const floor = new THREE.Mesh(new THREE.PlaneGeometry(ROOM_X*2, ROOM_Z*2), floorMat);
+  floor.rotation.x = -Math.PI/2; floor.receiveShadow = true;
+  scene.add(floor);
+
+  const wallTex = canvasTexture((ctx,w,h)=>{
+    ctx.fillStyle = '#10221a'; ctx.fillRect(0,0,w,h);
+    for(let i=0;i<220;i++){
+      ctx.fillStyle = 'rgba(0,0,0,'+(Math.random()*0.2)+')';
+      ctx.fillRect(Math.random()*w, Math.random()*h, Math.random()*3+1, Math.random()*3+1);
+    }
+  }, 256,256, 6,2);
+  const wallMat = new THREE.MeshStandardMaterial({ map: wallTex, roughness:1 });
+
+  function addWall(x,z,rotY,length){
+    const wall = new THREE.Mesh(new THREE.PlaneGeometry(length, ROOM_H), wallMat);
+    wall.position.set(x, ROOM_H/2, z);
+    wall.rotation.y = rotY;
+    scene.add(wall);
+  }
+  addWall(0, -ROOM_Z, 0, ROOM_X*2);
+  addWall(0, ROOM_Z, Math.PI, ROOM_X*2);
+  addWall(-ROOM_X, 0, Math.PI/2, ROOM_Z*2);
+  addWall(ROOM_X, 0, -Math.PI/2, ROOM_Z*2);
+
+  const ceilMat = new THREE.MeshStandardMaterial({ color:0x0a1410, roughness:1 });
+  const ceiling = new THREE.Mesh(new THREE.PlaneGeometry(ROOM_X*2, ROOM_Z*2), ceilMat);
+  ceiling.position.y = ROOM_H; ceiling.rotation.x = Math.PI/2;
+  scene.add(ceiling);
+
+  // hanging wires
+  for(let i=0;i<14;i++){
+    const wireMat = new THREE.MeshStandardMaterial({ color:0x111111 });
+    const wire = new THREE.Mesh(new THREE.CylinderGeometry(0.04,0.04, rand(1.5,4),5), wireMat);
+    wire.position.set(rand(-ROOM_X+3,ROOM_X-3), ROOM_H - wire.geometry.parameters.height/2, rand(-ROOM_Z+3,ROOM_Z-3));
+    scene.add(wire);
+  }
 
   function rand(min,max){ return Math.random()*(max-min)+min; }
 
-  function addTree(x,z){
+  // ============================================================
+  // OBSTACLES + PROPS
+  // ============================================================
+  const obstacles = []; // {x,z,r}
+
+  function addDesk(x,z,rotY){
     const group = new THREE.Group();
-    const trunkMat = new THREE.MeshStandardMaterial({ color:0x4a3626, roughness:0.9 });
-    const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.35,0.5,3.2,7), trunkMat);
-    trunk.position.y = 1.6;
-    group.add(trunk);
-    const foliageMat = new THREE.MeshStandardMaterial({ color:0x1f6e52, roughness:0.85, emissive:0x083026, emissiveIntensity:0.25 });
-    for(let i=0;i<3;i++){
-      const cone = new THREE.Mesh(new THREE.ConeGeometry(2.2 - i*0.5, 2.6, 8), foliageMat);
-      cone.position.y = 3.2 + i*1.6;
-      group.add(cone);
-    }
-    const y = groundHeightAt(x,z);
-    group.position.set(x, y, z);
+    const woodMat = new THREE.MeshStandardMaterial({ color:0x3a2c1f, roughness:0.85 });
+    const top = new THREE.Mesh(new THREE.BoxGeometry(3.4,0.15,1.6), woodMat);
+    top.position.y = 1.1; top.castShadow = true; top.receiveShadow = true;
+    group.add(top);
+    const legMat = new THREE.MeshStandardMaterial({ color:0x1a1310, roughness:0.9 });
+    [[-1.5,-0.6],[1.5,-0.6],[-1.5,0.6],[1.5,0.6]].forEach(([lx,lz])=>{
+      const leg = new THREE.Mesh(new THREE.BoxGeometry(0.12,1.1,0.12), legMat);
+      leg.position.set(lx,0.55,lz); group.add(leg);
+    });
+    group.position.set(x,0,z); group.rotation.y = rotY||0;
     scene.add(group);
-    obstacles.push({x,z,r:0.9});
+    obstacles.push({x,z,r:2.0});
+    return group;
   }
 
-  function addRock(x,z){
-    const mat = new THREE.MeshStandardMaterial({ color:0x5b6b63, roughness:1 });
-    const scale = rand(0.8,1.8);
-    const rock = new THREE.Mesh(new THREE.DodecahedronGeometry(scale,0), mat);
-    const y = groundHeightAt(x,z);
-    rock.position.set(x, y+scale*0.35, z);
-    rock.rotation.set(rand(0,Math.PI), rand(0,Math.PI), rand(0,Math.PI));
-    scene.add(rock);
-    obstacles.push({x,z,r:scale*0.9});
+  // monitor with animated "code" canvas
+  function addMonitor(deskGroup, localX, localZ){
+    const c = document.createElement('canvas'); c.width=128; c.height=96;
+    const ctx = c.getContext('2d');
+    const tex = new THREE.CanvasTexture(c);
+    const screenMat = new THREE.MeshBasicMaterial({ map: tex });
+    const frameMat = new THREE.MeshStandardMaterial({ color:0x0c0c0c, roughness:0.6 });
+    const frame = new THREE.Mesh(new THREE.BoxGeometry(1.3,1.0,0.12), frameMat);
+    const screen = new THREE.Mesh(new THREE.PlaneGeometry(1.1,0.8), screenMat);
+    screen.position.z = 0.065;
+    frame.add(screen);
+    frame.position.set(localX, 1.6, localZ);
+    deskGroup.add(frame);
+    monitors.push({ ctx, tex, w:128, h:96, timer:0 });
+  }
+  const monitors = [];
+  function drawMonitor(m){
+    m.ctx.fillStyle = '#01130a'; m.ctx.fillRect(0,0,m.w,m.h);
+    m.ctx.fillStyle = '#39ff6a'; m.ctx.font = '9px monospace';
+    for(let i=0;i<9;i++){
+      let line='';
+      const len = 14 + Math.floor(Math.random()*8);
+      for(let j=0;j<len;j++) line += Math.random()<0.5 ? Math.floor(Math.random()*10) : String.fromCharCode(65+Math.floor(Math.random()*26));
+      m.ctx.fillText(line, 3, 11 + i*10);
+    }
+    m.tex.needsUpdate = true;
   }
 
-  function farFromCenter(x,z,min){ return Math.sqrt(x*x+z*z) > min; }
-
-  // scatter trees & rocks, avoid spawn area
-  for(let i=0;i<70;i++){
-    let x,z;
-    do{ x = rand(-BOUND,BOUND); z = rand(-BOUND,BOUND); } while(!farFromCenter(x,z,10));
-    addTree(x,z);
-  }
-  for(let i=0;i<35;i++){
-    let x,z;
-    do{ x = rand(-BOUND,BOUND); z = rand(-BOUND,BOUND); } while(!farFromCenter(x,z,8));
-    addRock(x,z);
-  }
-
-  // ---------------- Crystals (Mission 1) ----------------
-  const crystalPositions = [
-    {x: 30, z: 18}, {x: -40, z: 25}, {x: 15, z: -55},
-    {x: -60, z: -30}, {x: 70, z: 60}
+  const deskSpots = [
+    {x:-20, z:-13, rot:0.3}, {x:20, z:-13, rot:-0.3},
+    {x:-22, z:12, rot:0.6}, {x:22, z:12, rot:-0.6}, {x:0,z:-16,rot:0}
   ];
-  const crystals = [];
-  const crystalMat = new THREE.MeshStandardMaterial({ color:0x37e8c9, emissive:0x37e8c9, emissiveIntensity:1.2, roughness:0.2, metalness:0.3 });
-  crystalPositions.forEach(p=>{
-    const mesh = new THREE.Mesh(new THREE.OctahedronGeometry(1.1,0), crystalMat);
-    const y = groundHeightAt(p.x,p.z) + 1.6;
-    mesh.position.set(p.x, y, p.z);
-    const light = new THREE.PointLight(0x37e8c9, 1.2, 8);
-    mesh.add(light);
-    scene.add(mesh);
-    crystals.push({ mesh, x:p.x, z:p.z, baseY:y, alive:true });
+  deskSpots.forEach(d=>{
+    const g = addDesk(d.x,d.z,d.rot);
+    addMonitor(g, rand(-0.6,0.6), 0);
+    if(Math.random()<0.5) addMonitor(g, rand(-0.6,0.6)*-1, 0.3);
   });
 
-  // ---------------- Guardian drones (Mission 2) ----------------
-  const dronePositions = [
-    {x: -20, z: -15}, {x: 45, z: -25}, {x: -55, z: 10},
-    {x: 20, z: 60}, {x: -15, z: 80}
-  ];
-  const drones = [];
-  const droneMat = new THREE.MeshStandardMaterial({ color:0x3a1414, emissive:0xff5c5c, emissiveIntensity:0.9, roughness:0.4 });
-  dronePositions.forEach(p=>{
+  // whiteboard with equations
+  (function addWhiteboard(){
+    const c = document.createElement('canvas'); c.width=512; c.height=256;
+    const ctx = c.getContext('2d');
+    ctx.fillStyle = '#e9e9e0'; ctx.fillRect(0,0,512,256);
+    ctx.strokeStyle = '#1c3d33'; ctx.fillStyle='#1c3d33'; ctx.font='20px monospace'; ctx.lineWidth=2;
+    ctx.fillText('dΨ/dt = -k(Ψ - Ψ0) + η(t)', 20,40);
+    ctx.fillText('Δτ = ∮ (∂φ/∂λ) dλ', 20,90);
+    ctx.fillText('Ω(n) = Σ ai·sin(nπx/L)', 20,140);
+    ctx.fillText('worldline conv. ~ 0.0483', 20,190);
+    ctx.strokeRect(10,10,492,236);
+    const tex = new THREE.CanvasTexture(c);
+    const board = new THREE.Mesh(new THREE.PlaneGeometry(5,2.4), new THREE.MeshStandardMaterial({map:tex, roughness:0.8}));
+    board.position.set(-ROOM_X+0.05, 3.2, -6);
+    board.rotation.y = Math.PI/2;
+    scene.add(board);
+  })();
+
+  // window with rain
+  const rainDrops = [];
+  (function addWindow(){
+    const glassMat = new THREE.MeshStandardMaterial({ color:0x0e2a3a, transparent:true, opacity:0.35, roughness:0.2, metalness:0.4 });
+    const glass = new THREE.Mesh(new THREE.PlaneGeometry(8,6), glassMat);
+    glass.position.set(ROOM_X-0.05, 5, 6);
+    glass.rotation.y = -Math.PI/2;
+    scene.add(glass);
+    const dropMat = new THREE.MeshBasicMaterial({ color:0x8fd9ff, transparent:true, opacity:0.5 });
+    for(let i=0;i<40;i++){
+      const drop = new THREE.Mesh(new THREE.PlaneGeometry(0.02,rand(0.2,0.5)), dropMat);
+      drop.position.set(ROOM_X-0.04, rand(2,9), rand(2,10));
+      drop.rotation.y = -Math.PI/2;
+      scene.add(drop);
+      rainDrops.push(drop);
+    }
+    // city bokeh lights outside
+    const bokehMat = new THREE.SpriteMaterial({ map: glowTexture(0x66ccff), transparent:true, opacity:0.5, blending:THREE.AdditiveBlending });
+    for(let i=0;i<12;i++){
+      const s = new THREE.Sprite(bokehMat);
+      s.scale.set(rand(0.6,1.6),rand(0.6,1.6),1);
+      s.position.set(ROOM_X+rand(3,20), rand(1,10), rand(-5,15));
+      scene.add(s);
+    }
+  })();
+
+  // glow sprite helper (fake bloom)
+  function glowTexture(hex){
+    const c = document.createElement('canvas'); c.width=128;c.height=128;
+    const ctx = c.getContext('2d');
+    const grad = ctx.createRadialGradient(64,64,0,64,64,64);
+    const col = new THREE.Color(hex);
+    grad.addColorStop(0, 'rgba('+Math.round(col.r*255)+','+Math.round(col.g*255)+','+Math.round(col.b*255)+',0.9)');
+    grad.addColorStop(1, 'rgba('+Math.round(col.r*255)+','+Math.round(col.g*255)+','+Math.round(col.b*255)+',0)');
+    ctx.fillStyle = grad; ctx.fillRect(0,0,128,128);
+    return new THREE.CanvasTexture(c);
+  }
+
+  // boxes / clutter
+  for(let i=0;i<16;i++){
+    const boxMat = new THREE.MeshStandardMaterial({ color:0x4a3a26, roughness:0.95 });
+    const s = rand(0.6,1.3);
+    const box = new THREE.Mesh(new THREE.BoxGeometry(s,s,s), boxMat);
+    let x,z;
+    do{ x = rand(-ROOM_X+3,ROOM_X-3); z = rand(-ROOM_Z+3,ROOM_Z-3); } while(Math.hypot(x,z) < 6);
+    box.position.set(x, s/2, z);
+    box.rotation.y = rand(0,Math.PI);
+    box.castShadow = true;
+    scene.add(box);
+    obstacles.push({x,z,r:s*0.75});
+  }
+
+  // ============================================================
+  // TIME MACHINE (centerpiece)
+  // ============================================================
+  const timeMachinePos = {x:0, z:0};
+  const machineRings = [];
+  (function buildTimeMachine(){
     const group = new THREE.Group();
-    const core = new THREE.Mesh(new THREE.IcosahedronGeometry(1.1,0), droneMat);
+    const baseMat = new THREE.MeshStandardMaterial({ color:0x2a2a2a, roughness:0.5, metalness:0.6 });
+    const base = new THREE.Mesh(new THREE.CylinderGeometry(3.6,4,1.2,16), baseMat);
+    base.position.y = 0.6; base.castShadow = true; base.receiveShadow = true;
+    group.add(base);
+
+    const coreMat = new THREE.MeshStandardMaterial({ color:0x28e0ff, emissive:0x28e0ff, emissiveIntensity:1.6, roughness:0.2, metalness:0.3 });
+    const core = new THREE.Mesh(new THREE.SphereGeometry(1.4,24,24), coreMat);
+    core.position.y = 4.2;
     group.add(core);
-    const ringMat = new THREE.MeshStandardMaterial({ color:0x220a0a, emissive:0xff5c5c, emissiveIntensity:0.4 });
-    const ring = new THREE.Mesh(new THREE.TorusGeometry(1.6,0.08,8,24), ringMat);
-    ring.rotation.x = Math.PI/2.3;
-    group.add(ring);
-    const y = groundHeightAt(p.x,p.z) + 2.2;
+    coreRef.mesh = core;
+
+    const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTexture(0x28e0ff), transparent:true, blending:THREE.AdditiveBlending }));
+    glow.scale.set(7,7,1); glow.position.y = 4.2;
+    group.add(glow);
+
+    const ringMat = new THREE.MeshStandardMaterial({ color:0x111111, emissive:0x28e0ff, emissiveIntensity:0.5, metalness:0.7, roughness:0.3 });
+    for(let i=0;i<3;i++){
+      const ring = new THREE.Mesh(new THREE.TorusGeometry(2.2+i*0.7, 0.08, 8, 32), ringMat);
+      ring.position.y = 4.2;
+      ring.rotation.x = Math.PI/2 + i*0.4;
+      group.add(ring);
+      machineRings.push(ring);
+    }
+
+    const pillarMat = new THREE.MeshStandardMaterial({ color:0x333333, metalness:0.5, roughness:0.4 });
+    for(let i=0;i<4;i++){
+      const a = (i/4)*Math.PI*2;
+      const pillar = new THREE.Mesh(new THREE.CylinderGeometry(0.18,0.18,4.2,8), pillarMat);
+      pillar.position.set(Math.cos(a)*2.6, 2.8, Math.sin(a)*2.6);
+      pillar.castShadow = true;
+      group.add(pillar);
+    }
+
+    const light = new THREE.PointLight(0x28e0ff, 2, 30);
+    light.position.y = 4.2;
+    group.add(light);
+    coreRef.light = light;
+
+    group.position.set(timeMachinePos.x, 0, timeMachinePos.z);
+    scene.add(group);
+    obstacles.push({x:timeMachinePos.x, z:timeMachinePos.z, r:4.4});
+  })();
+  const coreRef = {};
+
+  // ============================================================
+  // COLLECTIBLES (components) — Mission 1
+  // ============================================================
+  const componentSpots = [
+    {x:-14,z:-6},{x:16,z:-8},{x:-18,z:9},{x:19,z:10},{x:0,z:15}
+  ];
+  const components = [];
+  const compMat = new THREE.MeshStandardMaterial({ color:0xffb200, emissive:0xffb200, emissiveIntensity:1.1, roughness:0.3, metalness:0.4 });
+  componentSpots.forEach(p=>{
+    const group = new THREE.Group();
+    const tube = new THREE.Mesh(new THREE.CylinderGeometry(0.35,0.35,1.0,10), compMat);
+    group.add(tube);
+    const cap = new THREE.Mesh(new THREE.SphereGeometry(0.4,10,10), compMat);
+    cap.position.y = 0.6; group.add(cap);
+    const light = new THREE.PointLight(0xffb200, 0.9, 6);
+    group.add(light);
+    group.position.set(p.x, 1.3, p.z);
+    scene.add(group);
+    components.push({ group, x:p.x, z:p.z, baseY:1.3, alive:true });
+  });
+
+  // ============================================================
+  // ANOMALIES (glitch orbs) — Mission 2
+  // ============================================================
+  const anomalySpots = [
+    {x:-8,z:-14},{x:10,z:-15},{x:-16,z:2},{x:15,z:5},{x:5,z:16}
+  ];
+  const anomalies = [];
+  const anomMat = new THREE.MeshStandardMaterial({ color:0x3a0f0f, emissive:0xff3b3b, emissiveIntensity:1.1, roughness:0.3 });
+  anomalySpots.forEach(p=>{
+    const group = new THREE.Group();
+    const core = new THREE.Mesh(new THREE.IcosahedronGeometry(0.9,1), anomMat);
+    group.add(core);
+    const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTexture(0xff3b3b), transparent:true, blending:THREE.AdditiveBlending }));
+    glow.scale.set(3.4,3.4,1); group.add(glow);
+    const y = 2.1;
     group.position.set(p.x, y, p.z);
     scene.add(group);
-    drones.push({ group, x:p.x, z:p.z, baseY:y, alive:true, lastDamage:0 });
+    anomalies.push({ group, x:p.x, z:p.z, baseY:y, alive:true, lastDamage:0 });
   });
 
-  // ---------------- Ancient tower (Mission 3) ----------------
-  const towerPos = {x: 95, z: 95};
-  (function buildTower(){
+  // ============================================================
+  // NPCs (lab assistants)
+  // ============================================================
+  function buildNPC(x,z, coatColor){
     const group = new THREE.Group();
-    const stoneMat = new THREE.MeshStandardMaterial({ color:0x555f5a, roughness:0.9 });
-    const base = new THREE.Mesh(new THREE.CylinderGeometry(4.2,5,4,10), stoneMat);
-    base.position.y = 2;
-    group.add(base);
-    const shaft = new THREE.Mesh(new THREE.CylinderGeometry(3,3.4,32,10), stoneMat);
-    shaft.position.y = 4 + 16;
-    group.add(shaft);
-    const orbMat = new THREE.MeshStandardMaterial({ color:0x37e8c9, emissive:0x37e8c9, emissiveIntensity:1.5 });
-    const orb = new THREE.Mesh(new THREE.SphereGeometry(2,16,16), orbMat);
-    orb.position.y = 4 + 32 + 2;
-    group.add(orb);
-    const orbLight = new THREE.PointLight(0x37e8c9, 2, 40);
-    orbLight.position.copy(orb.position);
-    group.add(orbLight);
-    const y = groundHeightAt(towerPos.x, towerPos.z);
-    group.position.set(towerPos.x, y, towerPos.z);
+    const coatMat = new THREE.MeshStandardMaterial({ color:coatColor, roughness:0.8 });
+    const body = new THREE.Mesh(new THREE.CylinderGeometry(0.42,0.5,1.5,10), coatMat);
+    body.position.y = 1.0; body.castShadow = true;
+    group.add(body);
+    const skinMat = new THREE.MeshStandardMaterial({ color:0xd9b08c, roughness:0.7 });
+    const head = new THREE.Mesh(new THREE.SphereGeometry(0.32,14,14), skinMat);
+    head.position.y = 1.95; head.castShadow = true;
+    group.add(head);
+    group.position.set(x,0,z);
     scene.add(group);
-    obstacles.push({x:towerPos.x, z:towerPos.z, r:5.2});
-  })();
+    obstacles.push({x,z,r:0.8});
+    return group;
+  }
+  const npcs = [
+    { group: buildNPC(-10,-4, 0xe9e9e0), name:'Rei', lines:[
+        'Konverter fluksnya masih belum stabil...',
+        'Kalau kamu lihat kotak biru, tolong bawa ke mejaku.',
+        'Jangan terlalu dekat dengan anomali merah, itu bisa menggeser garis waktumu.'
+      ], t:0 },
+    { group: buildNPC(12,7, 0xdedad0), name:'Souta', lines:[
+        'Mesin waktunya butuh lima komponen inti biar bisa menyala penuh.',
+        'Aku dengar suara aneh dari sudut ruangan semalam...',
+        'Kalkulator di mejamu itu, coba pakai buat hitung ulang indeksnya.'
+      ], t:0 }
+  ];
+
+  // ============================================================
+  // AMBIENT PARTICLES (dust)
+  // ============================================================
+  const dustCount = 260;
+  const dustGeo = new THREE.BufferGeometry();
+  const dustPos = new Float32Array(dustCount*3);
+  for(let i=0;i<dustCount;i++){
+    dustPos[i*3] = rand(-ROOM_X,ROOM_X);
+    dustPos[i*3+1] = rand(0.2, ROOM_H-0.5);
+    dustPos[i*3+2] = rand(-ROOM_Z,ROOM_Z);
+  }
+  dustGeo.setAttribute('position', new THREE.BufferAttribute(dustPos,3));
+  const dustMat = new THREE.PointsMaterial({ size:0.05, color:0x9fffc0, transparent:true, opacity:0.35, map:glowTexture(0x9fffc0), blending:THREE.AdditiveBlending, depthWrite:false });
+  const dust = new THREE.Points(dustGeo, dustMat);
+  scene.add(dust);
 
   // ============================================================
   // MISSIONS STATE
   // ============================================================
   const missions = {
-    m1: { done:false, progress:0, total:5 },
-    m2: { done:false, progress:0, total:5 },
-    m3: { done:false, progress:0, total:1 },
+    m1:{ done:false, progress:0, total:5 },
+    m2:{ done:false, progress:0, total:5 },
+    m3:{ done:false, progress:0, total:1 },
   };
+  let allDoneShown = false;
+  let worldlineIndex = 0.192837;
 
   function updateMissionUI(){
     ['m1','m2','m3'].forEach(id=>{
-      const m = missions[id];
-      const el = document.getElementById(id);
+      const m = missions[id]; const el = document.getElementById(id);
       const bar = document.getElementById(id+'bar');
-      const countSpan = el.querySelector('.count');
-      countSpan.textContent = m.progress + '/' + m.total;
-      bar.style.width = Math.min(100, (m.progress/m.total)*100) + '%';
+      el.querySelector('.count').textContent = m.progress+'/'+m.total;
+      bar.style.width = Math.min(100,(m.progress/m.total)*100)+'%';
       el.classList.toggle('done', m.done);
     });
+    document.getElementById('statM1').textContent = missions.m1.progress+'/5';
+    document.getElementById('statM2').textContent = missions.m2.progress+'/5';
+    document.getElementById('statM3').textContent = missions.m3.done ? 'Aktif' : 'Nonaktif';
+    document.getElementById('statWorldline').textContent = worldlineIndex.toFixed(6);
     if(missions.m1.done && missions.m2.done && missions.m3.done && !allDoneShown){
-      allDoneShown = true;
-      setTimeout(showWinScreen, 600);
+      allDoneShown = true; setTimeout(showWinScreen, 500);
     }
   }
-  let allDoneShown = false;
 
-  function toast(msg){
+  function toast(msg, cls){
     const wrap = document.getElementById('toastWrap');
     const t = document.createElement('div');
-    t.className = 'toast';
+    t.className = 'toast' + (cls?(' '+cls):'');
     t.textContent = msg;
     wrap.appendChild(t);
-    setTimeout(()=> t.remove(), 3200);
+    setTimeout(()=>t.remove(), 3200);
   }
 
   // ============================================================
-  // AUDIO (simple synth beeps, no external assets)
+  // AUDIO
   // ============================================================
-  let actx = null;
-  function ensureAudio(){ if(!actx){ try{ actx = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } }
-  function beep(freq, dur, type, gain){
-    if(!actx) return;
-    const osc = actx.createOscillator();
-    const g = actx.createGain();
-    osc.type = type || 'sine';
-    osc.frequency.value = freq;
-    g.gain.value = gain || 0.15;
-    osc.connect(g); g.connect(actx.destination);
-    osc.start();
-    g.gain.exponentialRampToValueAtTime(0.0001, actx.currentTime + dur);
-    osc.stop(actx.currentTime + dur);
+  let actx = null, droneGain=null;
+  function ensureAudio(){
+    if(actx) return;
+    try{
+      actx = new (window.AudioContext||window.webkitAudioContext)();
+      const osc = actx.createOscillator();
+      droneGain = actx.createGain();
+      droneGain.gain.value = 0.02;
+      osc.type = 'sine'; osc.frequency.value = 55;
+      osc.connect(droneGain); droneGain.connect(actx.destination);
+      osc.start();
+    }catch(e){}
   }
-  function sfxCollect(){ beep(880,0.15,'sine',0.18); setTimeout(()=>beep(1320,0.18,'sine',0.14),90); }
-  function sfxShootHit(){ beep(180,0.12,'square',0.16); }
-  function sfxDamage(){ beep(120,0.2,'sawtooth',0.18); }
-  function sfxComplete(){ beep(660,0.15,'sine',0.16); setTimeout(()=>beep(880,0.15,'sine',0.16),120); setTimeout(()=>beep(1320,0.25,'sine',0.16),240); }
+  function beep(freq,dur,type,gain){
+    if(!actx) return;
+    const osc=actx.createOscillator(), g=actx.createGain();
+    osc.type=type||'sine'; osc.frequency.value=freq; g.gain.value=gain||0.15;
+    osc.connect(g); g.connect(actx.destination); osc.start();
+    g.gain.exponentialRampToValueAtTime(0.0001, actx.currentTime+dur);
+    osc.stop(actx.currentTime+dur);
+  }
+  function sfxCollect(){ beep(920,0.15,'sine',0.16); setTimeout(()=>beep(1380,0.18,'sine',0.12),90); }
+  function sfxHit(){ beep(160,0.14,'square',0.16); }
+  function sfxDamage(){ beep(110,0.2,'sawtooth',0.16); }
+  function sfxComplete(){ beep(660,0.15,'sine',0.15); setTimeout(()=>beep(880,0.15,'sine',0.15),120); setTimeout(()=>beep(1320,0.25,'sine',0.15),240); }
+  function sfxKey(){ beep(500,0.05,'square',0.06); }
 
   // ============================================================
   // PLAYER
   // ============================================================
-  const player = {
-    x: 0, z: 8, y: 0, vy: 0, grounded:true,
-    yaw: Math.PI, pitch: 0,
-    health: 100, radius: 0.6, eyeHeight: 1.7,
-    speed: 6.2, runSpeed: 10.5,
-  };
-  const spawn = { x:0, z:8 };
+  const player = { x:0, z:14, y:0, vy:0, grounded:true, yaw:Math.PI, pitch:0, health:100, radius:0.55, eyeHeight:1.7, speed:6.0, runSpeed:9.8 };
+  const spawn = { x:0, z:14 };
 
   const keys = {};
-  document.addEventListener('keydown', e=>{ keys[e.code]=true; });
+  document.addEventListener('keydown', e=>{
+    keys[e.code]=true;
+    if(!gameStarted) return;
+    if(e.code==='KeyC'){ toggleCalc(); }
+    if(e.code==='KeyV'){ toggleStatus(); }
+    if(e.code==='Escape'){
+      if(calcOpen){ closeCalc(); return; }
+      if(statusOpen){ closeStatus(); return; }
+      if(document.pointerLockElement===canvas){ document.exitPointerLock(); }
+      else if(!paused && !winShown){ pauseGame(); }
+    }
+  });
   document.addEventListener('keyup', e=>{ keys[e.code]=false; });
 
   let pointerLocked = false;
   const MOUSE_SENS = 0.0022;
-
   document.addEventListener('mousemove', e=>{
     if(!pointerLocked) return;
-    player.yaw -= e.movementX * MOUSE_SENS;
-    player.pitch -= e.movementY * MOUSE_SENS;
-    const lim = Math.PI/2 - 0.05;
+    player.yaw -= e.movementX*MOUSE_SENS;
+    player.pitch -= e.movementY*MOUSE_SENS;
+    const lim = Math.PI/2-0.05;
     player.pitch = Math.max(-lim, Math.min(lim, player.pitch));
   });
-
   function requestLock(){ canvas.requestPointerLock(); }
-
   document.addEventListener('pointerlockchange', ()=>{
-    pointerLocked = (document.pointerLockElement === canvas);
+    pointerLocked = (document.pointerLockElement===canvas);
     const hint = document.getElementById('hint');
     if(pointerLocked){
       hint.classList.add('hidden');
-      if(gameStarted && paused) resumeGame();
+      if(gameStarted && paused && !calcOpen && !statusOpen) resumeGame();
     } else {
       hint.classList.remove('hidden');
-      if(gameStarted && !paused && !winShown) pauseGame();
+      if(gameStarted && !paused && !winShown && !calcOpen && !statusOpen) pauseGame();
     }
   });
-
   canvas.addEventListener('click', ()=>{
-    if(!gameStarted || paused || winShown) return;
+    if(!gameStarted || paused || winShown || calcOpen || statusOpen) return;
     if(!pointerLocked){ requestLock(); return; }
-    shoot();
+    interact();
   });
 
   // ============================================================
-  // SHOOTING
+  // INTERACTION (shoot anomaly / talk to NPC)
   // ============================================================
   const raycaster = new THREE.Raycaster();
-  function shoot(){
+  function interact(){
     ensureAudio();
     raycaster.setFromCamera({x:0,y:0}, camera);
-    let closest = null; let closestDist = Infinity;
-    drones.forEach(d=>{
-      if(!d.alive) return;
-      const dist = raycaster.ray.distanceToPoint(d.group.position);
-      if(dist < 1.6){
-        const camDist = camera.position.distanceTo(d.group.position);
-        if(camDist < closestDist){ closestDist = camDist; closest = d; }
+
+    let bestNpc=null, bestNpcDist=Infinity;
+    npcs.forEach(n=>{
+      const d = raycaster.ray.distanceToPoint(n.group.position.clone().setY(1.3));
+      if(d<1.2){
+        const cd = camera.position.distanceTo(n.group.position);
+        if(cd<bestNpcDist && cd<8){ bestNpcDist=cd; bestNpc=n; }
       }
     });
-    if(closest && closestDist < 70){
-      killDrone(closest);
+    if(bestNpc){
+      const line = bestNpc.lines[bestNpc.t % bestNpc.lines.length];
+      bestNpc.t++;
+      toast(bestNpc.name+': "'+line+'"', 'dialog');
+      return;
     }
+
+    let bestAnom=null, bestAnomDist=Infinity;
+    anomalies.forEach(a=>{
+      if(!a.alive) return;
+      const d = raycaster.ray.distanceToPoint(a.group.position);
+      if(d<1.6){
+        const cd = camera.position.distanceTo(a.group.position);
+        if(cd<bestAnomDist){ bestAnomDist=cd; bestAnom=a; }
+      }
+    });
+    if(bestAnom && bestAnomDist<70){ stabilizeAnomaly(bestAnom); }
   }
 
-  function killDrone(d){
-    d.alive = false;
-    scene.remove(d.group);
-    sfxShootHit();
+  function stabilizeAnomaly(a){
+    a.alive=false; scene.remove(a.group); sfxHit();
     missions.m2.progress++;
-    if(missions.m2.progress >= missions.m2.total){ missions.m2.done = true; toast('Misi selesai: Kalahkan Penjaga Batu'); sfxComplete(); }
-    else toast('Penjaga batu dikalahkan (' + missions.m2.progress + '/' + missions.m2.total + ')');
+    worldlineIndex += 0.031 + Math.random()*0.01;
+    if(missions.m2.progress>=missions.m2.total){ missions.m2.done=true; toast('Misi selesai: Stabilkan Anomali'); sfxComplete(); }
+    else toast('Anomali distabilkan ('+missions.m2.progress+'/'+missions.m2.total+')');
     updateMissionUI();
   }
 
   // ============================================================
-  // COLLISION HELPERS
+  // COLLISION
   // ============================================================
-  function tryMove(nx, nz){
+  function tryMove(nx,nz){
+    if(nx < -ROOM_X+1 || nx > ROOM_X-1 || nz < -ROOM_Z+1 || nz > ROOM_Z-1) return false;
     for(const o of obstacles){
-      const dx = nx-o.x, dz = nz-o.z;
-      const distSq = dx*dx+dz*dz;
-      const minDist = o.r + player.radius;
-      if(distSq < minDist*minDist) return false;
+      const dx=nx-o.x, dz=nz-o.z;
+      const minDist = o.r+player.radius;
+      if(dx*dx+dz*dz < minDist*minDist) return false;
     }
     return true;
   }
@@ -542,182 +791,167 @@
   // ============================================================
   // GAME LOOP
   // ============================================================
-  let gameStarted = false, paused = false, winShown = false;
+  let gameStarted=false, paused=false, winShown=false, calcOpen=false, statusOpen=false;
+  let playTime = 0;
   const clock = new THREE.Clock();
 
   function updatePlayer(dt){
-    const forward = new THREE.Vector3(Math.sin(player.yaw), 0, Math.cos(player.yaw));
-    const right = new THREE.Vector3(Math.sin(player.yaw+Math.PI/2), 0, Math.cos(player.yaw+Math.PI/2));
-
-    let moveX = 0, moveZ = 0;
-    if(keys['KeyW']){ moveX -= forward.x; moveZ -= forward.z; }
-    if(keys['KeyS']){ moveX += forward.x; moveZ += forward.z; }
-    if(keys['KeyA']){ moveX -= right.x; moveZ -= right.z; }
-    if(keys['KeyD']){ moveX += right.x; moveZ += right.z; }
-
-    const len = Math.hypot(moveX, moveZ);
-    if(len > 0){ moveX/=len; moveZ/=len; }
-
+    const forward = new THREE.Vector3(Math.sin(player.yaw),0,Math.cos(player.yaw));
+    const right = new THREE.Vector3(Math.sin(player.yaw+Math.PI/2),0,Math.cos(player.yaw+Math.PI/2));
+    let mx=0, mz=0;
+    if(keys['KeyW']){ mx-=forward.x; mz-=forward.z; }
+    if(keys['KeyS']){ mx+=forward.x; mz+=forward.z; }
+    if(keys['KeyA']){ mx-=right.x; mz-=right.z; }
+    if(keys['KeyD']){ mx+=right.x; mz+=right.z; }
+    const len = Math.hypot(mx,mz);
+    if(len>0){ mx/=len; mz/=len; }
     const spd = (keys['ShiftLeft']||keys['ShiftRight']) ? player.runSpeed : player.speed;
-    const dx = moveX * spd * dt;
-    const dz = moveZ * spd * dt;
+    const nx = player.x + mx*spd*dt;
+    const nz = player.z + mz*spd*dt;
+    if(tryMove(nx, player.z)) player.x = nx;
+    if(tryMove(player.x, nz)) player.z = nz;
 
-    const nx = player.x + dx;
-    const nz = player.z + dz;
+    if(keys['Space'] && player.grounded){ player.vy=6.0; player.grounded=false; }
+    player.vy -= 15.5*dt;
+    player.y += player.vy*dt;
+    if(player.y<=0){ player.y=0; player.vy=0; player.grounded=true; }
 
-    if(tryMove(nx, player.z)) player.x = Math.max(-BOUND, Math.min(BOUND, nx));
-    if(tryMove(player.x, nz)) player.z = Math.max(-BOUND, Math.min(BOUND, nz));
-
-    // jump / gravity
-    const groundY = groundHeightAt(player.x, player.z);
-    if(keys['Space'] && player.grounded){
-      player.vy = 6.2;
-      player.grounded = false;
-    }
-    player.vy -= 15.5 * dt;
-    player.y += player.vy * dt;
-    if(player.y <= groundY){
-      player.y = groundY;
-      player.vy = 0;
-      player.grounded = true;
-    }
-
-    camera.position.set(player.x, player.y + player.eyeHeight, player.z);
+    camera.position.set(player.x, player.y+player.eyeHeight, player.z);
     camera.rotation.y = player.yaw;
     camera.rotation.x = player.pitch;
   }
 
-  function updateWorldObjects(t){
-    crystals.forEach(c=>{
+  function updateWorld(t,dt){
+    // time machine ambience
+    coreRef.mesh.rotation.y += dt*0.4;
+    coreRef.light.intensity = 1.6 + Math.sin(t*3)*0.5;
+    machineRings.forEach((r,i)=>{ r.rotation.z += dt*(0.3+i*0.15); });
+
+    // monitors refresh
+    monitors.forEach(m=>{
+      m.timer += dt;
+      if(m.timer>0.25){ m.timer=0; drawMonitor(m); }
+    });
+
+    // rain
+    rainDrops.forEach(d=>{
+      d.position.y -= dt*6;
+      if(d.position.y < 1){ d.position.y = 9; d.position.z = rand(2,10); }
+    });
+
+    // dust drift
+    const arr = dustGeo.attributes.position.array;
+    for(let i=0;i<dustCount;i++){
+      arr[i*3+1] += Math.sin(t*0.5+i)*0.0015;
+      arr[i*3] += Math.cos(t*0.3+i)*0.0012;
+    }
+    dustGeo.attributes.position.needsUpdate = true;
+
+    // components
+    components.forEach(c=>{
       if(!c.alive) return;
-      c.mesh.rotation.y += 0.02;
-      c.mesh.position.y = c.baseY + Math.sin(t*1.6 + c.x)*0.25;
-      const dx = player.x-c.x, dz = player.z-c.z;
-      if(Math.hypot(dx,dz) < 2.6){
-        c.alive = false;
-        scene.remove(c.mesh);
-        sfxCollect();
+      c.group.rotation.y += dt*1.4;
+      c.group.position.y = c.baseY + Math.sin(t*1.6+c.x)*0.2;
+      if(Math.hypot(player.x-c.x, player.z-c.z) < 2.4){
+        c.alive=false; scene.remove(c.group); sfxCollect();
         missions.m1.progress++;
-        if(missions.m1.progress >= missions.m1.total){ missions.m1.done = true; toast('Misi selesai: Kumpulkan Kristal'); sfxComplete(); }
-        else toast('Kristal ditemukan (' + missions.m1.progress + '/' + missions.m1.total + ')');
+        worldlineIndex += 0.021 + Math.random()*0.008;
+        if(missions.m1.progress>=missions.m1.total){ missions.m1.done=true; toast('Misi selesai: Kumpulkan Komponen'); sfxComplete(); }
+        else toast('Komponen ditemukan ('+missions.m1.progress+'/'+missions.m1.total+')');
         updateMissionUI();
       }
     });
 
-    drones.forEach(d=>{
-      if(!d.alive) return;
-      d.group.rotation.y += 0.015;
-      d.group.position.y = d.baseY + Math.sin(t*1.2 + d.x)*0.3;
-      const dx = player.x-d.x, dz = player.z-d.z;
-      const dist = Math.hypot(dx,dz);
-      if(dist < 4.2){
-        if(t - d.lastDamage > 0.7){
-          d.lastDamage = t;
-          player.health = Math.max(0, player.health - 6);
-          sfxDamage();
-          flashVignette();
-          updateHealthUI();
-          if(player.health <= 0) respawnPlayer();
+    // anomalies
+    anomalies.forEach(a=>{
+      if(!a.alive) return;
+      a.group.rotation.y += dt*1.0;
+      a.group.rotation.x += dt*0.6;
+      a.group.position.y = a.baseY + Math.sin(t*1.3+a.x)*0.3;
+      const dist = Math.hypot(player.x-a.x, player.z-a.z);
+      if(dist < 3.6 && t-a.lastDamage>0.7){
+        a.lastDamage = t;
+        player.health = Math.max(0, player.health-6);
+        sfxDamage(); flashHit(); updateHealthUI();
+        if(player.health<=0) respawnPlayer();
+      }
+    });
+
+    // NPC idle
+    npcs.forEach((n,i)=>{
+      n.group.position.y = Math.sin(t*1.2+i)*0.04;
+      n.group.rotation.y = Math.sin(t*0.4+i)*0.3;
+    });
+
+    // mission3: activate time machine (needs m1 & m2 done)
+    if(!missions.m3.done){
+      const dist = Math.hypot(player.x-timeMachinePos.x, player.z-timeMachinePos.z);
+      if(dist < 6.5 && (keys['KeyF'] || dist<5.2)){
+        if(missions.m1.done && missions.m2.done){
+          missions.m3.progress=1; missions.m3.done=true;
+          worldlineIndex = 1.939213;
+          toast('Misi selesai: Mesin Waktu Aktif!'); sfxComplete();
+          updateMissionUI();
+        } else if(!machineWarned){
+          machineWarned = true;
+          toast('Butuh komponen & anomali distabilkan dulu sebelum mesin bisa menyala.', 'warn');
         }
       }
-    });
-
-    if(!missions.m3.done){
-      const dx = player.x-towerPos.x, dz = player.z-towerPos.z;
-      if(Math.hypot(dx,dz) < 8){
-        missions.m3.progress = 1;
-        missions.m3.done = true;
-        toast('Misi selesai: Temukan Menara Purba');
-        sfxComplete();
-        updateMissionUI();
-      }
     }
 
-    // slow regen
-    if(player.health < 100){
-      player.health = Math.min(100, player.health + 3*dtGlobal);
-      updateHealthUI();
-    }
+    if(player.health<100){ player.health = Math.min(100, player.health+3*dt); updateHealthUI(); }
+
+    playTime += dt;
+    const mm = Math.floor(playTime/60).toString().padStart(2,'0');
+    const ss = Math.floor(playTime%60).toString().padStart(2,'0');
+    document.getElementById('statTime').textContent = mm+':'+ss;
   }
+  let machineWarned = false;
 
-  let dtGlobal = 0;
-  let lastDamageFlash = 0;
-  function flashVignette(){
-    const v = document.getElementById('vignette');
+  function flashHit(){
+    const v = document.getElementById('vignetteHit');
     v.classList.add('hit');
-    lastDamageFlash = performance.now();
-    setTimeout(()=>{
-      if(performance.now() - lastDamageFlash >= 190) v.classList.remove('hit');
-    }, 200);
+    setTimeout(()=>v.classList.remove('hit'), 200);
   }
-
   function respawnPlayer(){
-    player.x = spawn.x; player.z = spawn.z; player.y = groundHeightAt(spawn.x,spawn.z);
-    player.health = 60;
-    toast('Kesadaranmu goyah... kembali ke titik awal');
+    player.x=spawn.x; player.z=spawn.z; player.y=0; player.health=60;
+    toast('Kesadaranmu goyah... kembali ke titik masuk', 'warn');
     updateHealthUI();
   }
-
   function updateHealthUI(){
-    document.getElementById('healthFill').style.width = player.health + '%';
+    document.getElementById('healthFill').style.width = player.health+'%';
+    document.getElementById('statHealth').textContent = Math.round(player.health)+'%';
   }
 
-  // ---------------- Minimap ----------------
-  const mmCanvas = document.getElementById('minimap');
-  const mmCtx = mmCanvas.getContext('2d');
-  const MM_SCALE = 150 / (BOUND*2.1);
-  function drawMinimap(){
-    mmCtx.clearRect(0,0,150,150);
-    mmCtx.fillStyle = 'rgba(28,74,60,0.4)';
-    mmCtx.beginPath(); mmCtx.arc(75,75,74,0,Math.PI*2); mmCtx.fill();
-
-    function toMM(x,z){
-      return { mx: 75 + x*MM_SCALE, my: 75 + z*MM_SCALE };
-    }
-    // crystals
-    crystals.forEach(c=>{
-      if(!c.alive) return;
-      const p = toMM(c.x,c.z);
-      mmCtx.fillStyle = '#37e8c9';
-      mmCtx.beginPath(); mmCtx.arc(p.mx,p.my,3,0,Math.PI*2); mmCtx.fill();
-    });
-    // drones
-    drones.forEach(d=>{
-      if(!d.alive) return;
-      const p = toMM(d.x,d.z);
-      mmCtx.fillStyle = '#ff5c5c';
-      mmCtx.beginPath(); mmCtx.arc(p.mx,p.my,3,0,Math.PI*2); mmCtx.fill();
-    });
-    // tower
-    {
-      const p = toMM(towerPos.x, towerPos.z);
-      mmCtx.fillStyle = '#ffb457';
-      mmCtx.beginPath(); mmCtx.arc(p.mx,p.my,4,0,Math.PI*2); mmCtx.fill();
-    }
-    // player
-    const pp = toMM(player.x, player.z);
-    mmCtx.save();
-    mmCtx.translate(pp.mx, pp.my);
-    mmCtx.rotate(player.yaw);
-    mmCtx.fillStyle = '#ffffff';
-    mmCtx.beginPath();
-    mmCtx.moveTo(0,-6); mmCtx.lineTo(4,5); mmCtx.lineTo(-4,5); mmCtx.closePath(); mmCtx.fill();
-    mmCtx.restore();
+  // radar
+  const radarCtx = document.getElementById('radar').getContext('2d');
+  const RADAR_SCALE = 140/(Math.max(ROOM_X,ROOM_Z)*2.3);
+  function drawRadar(){
+    radarCtx.clearRect(0,0,140,140);
+    radarCtx.fillStyle='rgba(28,74,60,0.4)';
+    radarCtx.beginPath(); radarCtx.arc(70,70,69,0,Math.PI*2); radarCtx.fill();
+    function toR(x,z){ return { rx:70+x*RADAR_SCALE, ry:70+z*RADAR_SCALE }; }
+    components.forEach(c=>{ if(!c.alive) return; const p=toR(c.x,c.z); radarCtx.fillStyle='#ffb200'; radarCtx.beginPath(); radarCtx.arc(p.rx,p.ry,3,0,Math.PI*2); radarCtx.fill(); });
+    anomalies.forEach(a=>{ if(!a.alive) return; const p=toR(a.x,a.z); radarCtx.fillStyle='#ff3b3b'; radarCtx.beginPath(); radarCtx.arc(p.rx,p.ry,3,0,Math.PI*2); radarCtx.fill(); });
+    { const p=toR(timeMachinePos.x,timeMachinePos.z); radarCtx.fillStyle='#28e0ff'; radarCtx.beginPath(); radarCtx.arc(p.rx,p.ry,4,0,Math.PI*2); radarCtx.fill(); }
+    const pp = toR(player.x, player.z);
+    radarCtx.save(); radarCtx.translate(pp.rx,pp.ry); radarCtx.rotate(player.yaw);
+    radarCtx.fillStyle='#ffffff';
+    radarCtx.beginPath(); radarCtx.moveTo(0,-6); radarCtx.lineTo(4,5); radarCtx.lineTo(-4,5); radarCtx.closePath(); radarCtx.fill();
+    radarCtx.restore();
   }
 
   function animate(){
     requestAnimationFrame(animate);
     const dt = Math.min(0.05, clock.getDelta());
-    dtGlobal = dt;
-    if(gameStarted && !paused && !winShown){
+    if(gameStarted && !paused && !winShown && !calcOpen && !statusOpen){
       const t = clock.elapsedTime;
       updatePlayer(dt);
-      updateWorldObjects(t);
-      drawMinimap();
+      updateWorld(t,dt);
+      drawRadar();
     }
     renderer.render(scene, camera);
   }
-
   window.addEventListener('resize', ()=>{
     camera.aspect = window.innerWidth/window.innerHeight;
     camera.updateProjectionMatrix();
@@ -725,7 +959,83 @@
   });
 
   // ============================================================
-  // MENU / PAUSE / WIN FLOW
+  // CALCULATOR
+  // ============================================================
+  let calcExpr = '';
+  const calcScreen = document.getElementById('calcScreen');
+  const calcGrid = document.getElementById('calcGrid');
+  const calcKeys = ['7','8','9','÷','4','5','6','×','1','2','3','-','0','.','C','+','='];
+  calcKeys.forEach(k=>{
+    const btn = document.createElement('div');
+    btn.className = 'calcKey' + (['÷','×','-','+'].includes(k)?' op':'') + (k==='='?' eq':'') + (k==='C'?' clear':'');
+    btn.textContent = k;
+    btn.addEventListener('click', ()=> calcPress(k));
+    calcGrid.appendChild(btn);
+  });
+  function calcPress(k){
+    sfxKey();
+    if(k==='C'){ calcExpr=''; }
+    else if(k==='='){
+      try{
+        const safe = calcExpr.replace(/×/g,'*').replace(/÷/g,'/');
+        if(!/^[0-9+\-*/.\s]+$/.test(safe)) throw new Error('bad');
+        const result = Function('"use strict";return ('+safe+')')();
+        calcExpr = (Math.round(result*1e6)/1e6).toString();
+      }catch(e){ calcExpr = 'Error'; }
+    } else {
+      if(calcExpr==='Error') calcExpr='';
+      calcExpr += k;
+    }
+    calcScreen.textContent = calcExpr || '0';
+  }
+  document.addEventListener('keydown', e=>{
+    if(!calcOpen) return;
+    if(/^[0-9]$/.test(e.key)) calcPress(e.key);
+    else if(e.key==='.') calcPress('.');
+    else if(e.key==='+') calcPress('+');
+    else if(e.key==='-') calcPress('-');
+    else if(e.key==='*') calcPress('×');
+    else if(e.key==='/') calcPress('÷');
+    else if(e.key==='Enter'){ calcPress('='); }
+    else if(e.key==='Backspace'){ calcExpr = calcExpr.slice(0,-1); calcScreen.textContent = calcExpr||'0'; }
+  });
+
+  function toggleCalc(){ calcOpen ? closeCalc() : openCalc(); }
+  function openCalc(){
+    if(statusOpen) closeStatus();
+    calcOpen = true;
+    document.getElementById('calcModal').classList.remove('hidden');
+    if(document.pointerLockElement===canvas) document.exitPointerLock();
+  }
+  function closeCalc(){
+    calcOpen = false;
+    document.getElementById('calcModal').classList.add('hidden');
+    if(gameStarted && !paused && !winShown) requestLock();
+  }
+  document.getElementById('openCalcBtn').addEventListener('click', openCalc);
+  document.getElementById('closeCalcBtn').addEventListener('click', closeCalc);
+
+  // ============================================================
+  // STATUS MODAL
+  // ============================================================
+  function toggleStatus(){ statusOpen ? closeStatus() : openStatus(); }
+  function openStatus(){
+    if(calcOpen) closeCalc();
+    statusOpen = true;
+    updateMissionUI();
+    document.getElementById('statusModal').classList.remove('hidden');
+    if(document.pointerLockElement===canvas) document.exitPointerLock();
+  }
+  function closeStatus(){
+    statusOpen = false;
+    document.getElementById('statusModal').classList.add('hidden');
+    if(gameStarted && !paused && !winShown) requestLock();
+  }
+  document.getElementById('openStatusBtn').addEventListener('click', openStatus);
+  document.getElementById('closeStatusBtn').addEventListener('click', closeStatus);
+
+  // ============================================================
+  // MENU / PAUSE / WIN
   // ============================================================
   const menuEl = document.getElementById('menu');
   const pauseEl = document.getElementById('pause');
@@ -737,43 +1047,25 @@
     menuEl.classList.add('hidden');
     hudEl.classList.remove('hidden');
     gameStarted = true; paused = false;
-    player.x = spawn.x; player.z = spawn.z; player.y = groundHeightAt(spawn.x,spawn.z);
-    updateHealthUI();
-    updateMissionUI();
+    player.x=spawn.x; player.z=spawn.z; player.y=0;
+    updateHealthUI(); updateMissionUI();
     requestLock();
   });
-
   function pauseGame(){
     paused = true;
     pauseEl.classList.remove('hidden');
     const total = missions.m1.progress+missions.m2.progress+missions.m3.progress;
-    document.getElementById('pauseSummary').textContent =
-      'Progres: ' + total + ' dari ' + (missions.m1.total+missions.m2.total+missions.m3.total) + ' tujuan tercapai.';
+    document.getElementById('pauseSummary').textContent = 'Progres: '+total+' dari '+(missions.m1.total+missions.m2.total+missions.m3.total)+' tujuan tercapai.';
   }
-  function resumeGame(){
-    paused = false;
-    pauseEl.classList.add('hidden');
-  }
-  document.getElementById('resumeBtn').addEventListener('click', ()=>{
-    requestLock();
-  });
-  document.getElementById('restartBtn').addEventListener('click', ()=>{
-    location.reload();
-  });
-
-  document.addEventListener('keydown', e=>{
-    if(e.code === 'Escape' && gameStarted && !winShown){
-      if(document.pointerLockElement === canvas){ document.exitPointerLock(); }
-      else if(!paused){ pauseGame(); }
-    }
-  });
-
+  function resumeGame(){ paused = false; pauseEl.classList.add('hidden'); }
+  document.getElementById('resumeBtn').addEventListener('click', requestLock);
+  document.getElementById('restartBtn').addEventListener('click', ()=>location.reload());
   function showWinScreen(){
     winShown = true;
-    if(document.pointerLockElement === canvas) document.exitPointerLock();
+    if(document.pointerLockElement===canvas) document.exitPointerLock();
     winEl.classList.remove('hidden');
   }
-  document.getElementById('playAgainBtn').addEventListener('click', ()=>{ location.reload(); });
+  document.getElementById('playAgainBtn').addEventListener('click', ()=>location.reload());
 
   // ============================================================
   // BOOT
