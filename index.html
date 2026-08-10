@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ruang Waktu — Apartemen RX-7 (Enhanced Edition)</title>
+<title>Ruang Waktu — Apartemen RX-7 (Enhanced + Calculator)</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -46,7 +46,7 @@
   .title-main span{ color:var(--sage); text-shadow: 0 0 30px rgba(0,255,204,0.6); }
   .subtitle{ font-size:16px; color:var(--dim); margin-bottom:40px; font-weight:400; max-width:600px; line-height:1.6; }
 
-  .rules{ display:grid; grid-template-columns: repeat(3, minmax(140px,170px)); gap:16px; margin-bottom:40px; }
+  .rules{ display:grid; grid-template-columns: repeat(4, minmax(100px,140px)); gap:12px; margin-bottom:40px; }
   .rule{ background:var(--glass); border:1px solid var(--glass-border); border-radius:16px; padding:16px 10px; font-size:14px; backdrop-filter: blur(10px); }
   .rule b{ display:block; color:var(--sage); font-size:20px; margin-bottom:6px; font-family:'Poppins',sans-serif; font-weight:700; }
 
@@ -58,8 +58,6 @@
     transition: all 0.2s ease;
   }
   .btn:hover{ transform:translateY(-3px) scale(1.02); box-shadow: 0 15px 40px rgba(0,255,204,0.5), inset 0 -3px 0 rgba(0,0,0,0.2); }
-  .btn.secondary{ background:transparent; color:var(--text); border:2px solid var(--glass-border); box-shadow:none; margin-top:16px; }
-  .btn.secondary:hover{ border-color:var(--sage); color:var(--sage); text-shadow: 0 0 10px var(--sage); }
 
   /* ---------------- HUD ---------------- */
   #hud{ position:fixed; inset:0; z-index:10; pointer-events:none; }
@@ -87,18 +85,41 @@
   .bar-track{ height:6px; border-radius:6px; background:rgba(0,0,0,0.5); border:1px solid rgba(255,255,255,0.1); overflow:hidden; }
   .bar-fill{ height:100%; background:linear-gradient(90deg, var(--sage-dim), var(--sage)); width:0%; transition:width 0.4s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 0 10px var(--sage); }
 
+  #toolHint{ position:absolute; bottom:30px; left:24px; font-size:14px; color:var(--dim); background:var(--glass); border:1px solid var(--glass-border); border-radius:10px; padding:10px 16px; backdrop-filter: blur(8px); }
+  #toolHint b{ color:var(--sage); }
+
   #toastWrap{ position:absolute; bottom:100px; left:50%; transform:translateX(-50%); display:flex; flex-direction:column; align-items:center; gap:10px; width:min(90vw,600px); }
   .toast{
     background:var(--glass-strong); border:1px solid var(--glass-border); border-left:4px solid var(--sage); border-radius:12px; padding:14px 24px; font-size:15px; font-weight:500;
     animation: toastIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), toastOut 0.5s ease 3s forwards; text-align:center; backdrop-filter: blur(10px); box-shadow: 0 5px 15px rgba(0,0,0,0.5);
   }
-  .toast.dialog{ border-left-color:var(--amber); }
-  .toast.warn{ border-left-color:var(--danger); }
   @keyframes toastIn{ from{opacity:0; transform:translateY(20px) scale(0.9);} to{opacity:1; transform:translateY(0) scale(1);} }
   @keyframes toastOut{ to{opacity:0; transform:translateY(-20px) scale(0.9);} }
 
-  #vignetteHit{ position:absolute; inset:0; pointer-events:none; box-shadow: inset 0 0 0 0 rgba(255,51,51,0); transition: box-shadow 0.1s ease; }
-  #vignetteHit.hit{ box-shadow: inset 0 0 200px 50px rgba(255,51,51,0.6); }
+  /* ---------------- CALCULATOR MODAL ---------------- */
+  .modal{ position:fixed; inset:0; z-index:40; display:flex; align-items:center; justify-content:center; background:rgba(5,7,10,0.8); backdrop-filter: blur(6px); pointer-events:auto; }
+  .modalBox{
+    background:linear-gradient(180deg, rgba(20,25,35,0.95), rgba(10,15,25,0.95));
+    border:1px solid var(--sage); border-radius:20px; padding:24px; width:min(92vw,340px);
+    box-shadow:0 20px 60px rgba(0,255,204,0.2);
+  }
+  .modalTitle{ font-family:'Poppins',sans-serif; font-size:16px; letter-spacing:1px; color:var(--text); font-weight:700; margin-bottom:16px; text-align:center; }
+  #calcScreen{
+    background:rgba(0,0,0,0.5); border:1px solid var(--glass-border); border-radius:12px; padding:16px;
+    font-family:'Space Mono',monospace; font-size:32px; color:var(--sage); text-align:right; margin-bottom:16px;
+    min-height:50px; overflow:hidden; letter-spacing:1px; box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+  }
+  #calcGrid{ display:grid; grid-template-columns: repeat(4,1fr); gap:8px; }
+  .calcKey{
+    padding:16px 0; border-radius:10px; border:1px solid var(--glass-border); background:rgba(255,255,255,0.05);
+    color:var(--text); font-family:'Inter',sans-serif; font-weight:600; font-size:18px; cursor:pointer; transition: all 0.15s ease; text-align:center;
+  }
+  .calcKey:hover{ background:rgba(0,255,204,0.15); border-color:var(--sage); box-shadow: 0 0 10px rgba(0,255,204,0.3); }
+  .calcKey.op{ color:var(--amber); }
+  .calcKey.eq{ background:linear-gradient(180deg, var(--sage), var(--sage-dim)); color:#001122; grid-column: span 2; }
+  .calcKey.clear{ color:var(--danger); }
+  .modalClose{ width:100%; margin-top:16px; background:transparent; color:var(--text); border:1px solid var(--glass-border); padding:12px; border-radius:10px; cursor:pointer; font-family:'Poppins'; font-weight:600; }
+  .modalClose:hover{ border-color:var(--danger); color:var(--danger); }
 
   #loading{ position:fixed; inset:0; z-index:50; display:flex; align-items:center; justify-content:center; background:#05070a; color:var(--sage); font-family:'Poppins',sans-serif; letter-spacing:4px; font-size:18px; font-weight:700; text-transform:uppercase; animation: pulse 1.5s infinite; }
   @keyframes pulse { 0% { opacity: 0.5; } 50% { opacity: 1; text-shadow: 0 0 20px var(--sage); } 100% { opacity: 0.5; } }
@@ -109,7 +130,6 @@
 <div id="loading">Menginisialisasi Simulasi...</div>
 <canvas id="game"></canvas>
 <div id="vignette"></div>
-<div id="vignetteHit"></div>
 
 <div id="cinematicBars" class="hidden cinematic-active">
   <div class="cinematic-bar"></div>
@@ -123,9 +143,10 @@
   <div class="title-main">RUANG <span>WAKTU</span>: APEX</div>
   <div class="subtitle">Badai petir mengamuk di luar Apartemen RX-7. Perangkat eksperimental bereaksi terhadap cuaca, menciptakan distorsi realitas. Netralisir anomali sebelum inti reaktor kelebihan beban.</div>
   <div class="rules">
-    <div class="rule"><b>WASD</b>Bergerak</div>
+    <div class="rule"><b>WASD</b>Gerak</div>
     <div class="rule"><b>Mouse</b>Lihat</div>
     <div class="rule"><b>Klik</b>Interaksi</div>
+    <div class="rule"><b>C</b>Kalkulator</div>
   </div>
   <button class="btn" id="startBtn">Mulai Simulasi</button>
 </div>
@@ -135,7 +156,7 @@
   <div class="eyebrow">Stabilitas Tercapai</div>
   <div class="title-main">REALITAS <span>DIAMANKAN</span></div>
   <div class="subtitle">Anomali telah diredakan. Inti reaktor kembali stabil dan badai mulai mereda. Kerja bagus, Operator.</div>
-  <button class="btn" id="playAgainBtn">Keluar Simulasi</button>
+  <button class="btn" id="playAgainBtn" onclick="location.reload()">Keluar Simulasi</button>
 </div>
 
 <!-- HUD -->
@@ -147,7 +168,18 @@
     <div class="mission-item" id="m2"><div class="mission-name"><span>Netralisir Glitch</span><span class="count">0/5</span></div><div class="bar-track"><div class="bar-fill" id="m2bar"></div></div></div>
     <div class="mission-item" id="m3"><div class="mission-name"><span>Restart Reaktor</span><span class="count">0/1</span></div><div class="bar-track"><div class="bar-fill" id="m3bar"></div></div></div>
   </div>
+  <div id="toolHint">Tekan <b>C</b> untuk membuka Kalkulator</div>
   <div id="toastWrap"></div>
+</div>
+
+<!-- CALCULATOR MODAL -->
+<div id="calcModal" class="modal hidden">
+  <div class="modalBox">
+    <div class="modalTitle">Kalkulator Sistem</div>
+    <div id="calcScreen" class="mono">0</div>
+    <div id="calcGrid"></div>
+    <button class="modalClose" id="closeCalcBtn">Tutup (Esc)</button>
+  </div>
 </div>
 
 <script>
@@ -164,7 +196,7 @@
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 0.8; // Darker for storm vibe
+  renderer.toneMappingExposure = 0.8;
 
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 500);
@@ -172,7 +204,6 @@
   scene.background = new THREE.Color(0x020305);
   scene.fog = new THREE.FogExp2(0x05070a, 0.025);
 
-  // Helper functions
   function rand(min,max){ return Math.random()*(max-min)+min; }
   function glowTexture(hex){
     const c = document.createElement('canvas'); c.width=128;c.height=128;
@@ -187,30 +218,28 @@
   }
 
   // ============================================================
-  // LIGHTING & WEATHER (Thunderstorm)
+  // LIGHTING & WEATHER
   // ============================================================
-  const ambient = new THREE.AmbientLight(0x1a2639, 0.4); // Cold ambient
+  const ambient = new THREE.AmbientLight(0x1a2639, 0.4);
   scene.add(ambient);
   
-  // Lightning effect
   const lightningLight = new THREE.DirectionalLight(0xccddff, 0);
   lightningLight.position.set(-50, 20, -10);
   scene.add(lightningLight);
 
-  const roomFill = new THREE.PointLight(0xffaa55, 0.5, 20); // Warm interior
+  const roomFill = new THREE.PointLight(0xffaa55, 0.5, 20);
   roomFill.position.set(0, 5, 0);
   scene.add(roomFill);
 
-  // Rain Particles Outside Window
   const rainCount = 3000;
   const rainGeo = new THREE.BufferGeometry();
   const rainPos = new Float32Array(rainCount * 3);
   const rainVel = [];
   for(let i=0; i<rainCount; i++){
-    rainPos[i*3] = rand(-40, -16); // Outside the window (X < -15.5)
-    rainPos[i*3+1] = rand(-5, 25); // Y
-    rainPos[i*3+2] = rand(-20, 15); // Z
-    rainVel.push(rand(0.5, 0.8)); // Speed variation
+    rainPos[i*3] = rand(-40, -16);
+    rainPos[i*3+1] = rand(-5, 25);
+    rainPos[i*3+2] = rand(-20, 15);
+    rainVel.push(rand(0.5, 0.8));
   }
   rainGeo.setAttribute('position', new THREE.BufferAttribute(rainPos, 3));
   const rainMat = new THREE.PointsMaterial({ color: 0xaaccff, size: 0.1, transparent: true, opacity: 0.6, blending: THREE.AdditiveBlending });
@@ -218,18 +247,16 @@
   scene.add(rainSystem);
 
   // ============================================================
-  // ROOM GEOMETRY (Cyberpunk-ish / Darker)
+  // ROOM GEOMETRY
   // ============================================================
   const ROOM_X = 15.5, ROOM_Z = 10.5, ROOM_H = 8;
   const obstacles = [];
 
-  // Floor (Reflective, dark)
   const floorMat = new THREE.MeshStandardMaterial({ color: 0x111316, roughness: 0.2, metalness: 0.6 });
   const floor = new THREE.Mesh(new THREE.PlaneGeometry(40,40), floorMat);
   floor.rotation.x = -Math.PI/2; floor.position.set(0,0,-4.5); floor.receiveShadow = true;
   scene.add(floor);
 
-  // Walls (Concrete dark)
   const wallMat = new THREE.MeshStandardMaterial({ color: 0x2a2d34, roughness: 0.9, metalness: 0.1 });
   function addWall(x,z,rotY,length,h,yOffset){
     const wall = new THREE.Mesh(new THREE.PlaneGeometry(length, h||ROOM_H), wallMat);
@@ -244,20 +271,18 @@
   addWall(-9, -15.25, -Math.PI/2, 9.5);
   addWall(-11, -20, 0, 4);
 
-  // Huge Glass Window
   const glassMat = new THREE.MeshPhysicalMaterial({ color: 0x88bbff, transmission: 0.9, opacity: 1, metalness: 0, roughness: 0.1, ior: 1.5, side: THREE.DoubleSide });
   const windowGlass = new THREE.Mesh(new THREE.PlaneGeometry(12, 6), glassMat);
   windowGlass.position.set(-ROOM_X+0.1, 4, -2);
   windowGlass.rotation.y = Math.PI/2;
   scene.add(windowGlass);
   
-  // Window Frame
   const frameMat = new THREE.MeshStandardMaterial({color: 0x111111, metalness:0.8, roughness:0.2});
   const frame1 = new THREE.Mesh(new THREE.BoxGeometry(0.2, 6, 0.2), frameMat); frame1.position.set(-ROOM_X+0.1, 4, -2); scene.add(frame1);
   const frame2 = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.2, 12), frameMat); frame2.position.set(-ROOM_X+0.1, 4, -2); scene.add(frame2);
 
   // ============================================================
-  // INTERACTIVE DESK & MONITOR
+  // DESK & MONITOR
   // ============================================================
   const monitors = [];
   function addDesk(x,z,rotY){
@@ -266,7 +291,6 @@
     const top = new THREE.Mesh(new THREE.BoxGeometry(3,0.1,1.5), woodMat);
     top.position.y = 1.05; top.castShadow=true; group.add(top);
     
-    // Monitor screen (Interactive)
     const c = document.createElement('canvas'); c.width=256;c.height=128;
     const ctx = c.getContext('2d');
     const tex = new THREE.CanvasTexture(c);
@@ -276,12 +300,11 @@
     screen.position.set(0, 1.6, -0.2); screen.rotation.x = -0.1;
     group.add(screen);
     
-    // Glow light for monitor
     const monLight = new THREE.PointLight(0x00ffcc, 0.5, 4);
     monLight.position.set(0, 1.6, 0.5);
     group.add(monLight);
 
-    monitors.push({ ctx, tex, w:256, h:128, timer:0, active: false, light: monLight, screen: screen });
+    monitors.push({ ctx, tex, w:256, h:128, timer:0, light: monLight });
     
     group.position.set(x,0,z); group.rotation.y = rotY||0;
     scene.add(group);
@@ -298,9 +321,9 @@
         m.light.intensity = 1.0 + Math.random()*0.2;
         m.light.color.setHex(0x00ffcc);
         m.ctx.fillStyle = '#00ffcc';
-        m.ctx.fillText('>> SYSTEM OVERRIDE ACTIVE', 10, 20);
-        m.ctx.fillText('>> ANOMALY DETECTED: ' + (Math.random()*100).toFixed(2) + '%', 10, 40);
-        m.ctx.fillText('>> REACTOR STABILITY: CRITICAL', 10, 60);
+        m.ctx.fillText('>> SYSTEM OVERRIDE', 10, 20);
+        m.ctx.fillText('>> ANOMALY: ' + (Math.random()*100).toFixed(2) + '%', 10, 40);
+        m.ctx.fillText('>> REACTOR: CRITICAL', 10, 60);
         for(let i=0; i<3; i++){
             m.ctx.fillRect(10, 80 + i*15, Math.random()*200, 8);
         }
@@ -315,25 +338,21 @@
   addDesk(-13, -3, Math.PI/2);
 
   // ============================================================
-  // COMPLEX 3D DEVICE (REACTOR CORE)
+  // REACTOR CORE
   // ============================================================
   const devicePos = {x:-11, z:-17};
   const coreRef = {};
   (function buildDevice(){
     const group = new THREE.Group();
-    
-    // Base platform
     const baseMat = new THREE.MeshStandardMaterial({ color:0x111111, roughness:0.2, metalness:0.9 });
     const base = new THREE.Mesh(new THREE.CylinderGeometry(1.5, 1.8, 0.4, 32), baseMat);
     group.add(base);
 
-    // TorusKnot Core (High detail)
     const coreMat = new THREE.MeshStandardMaterial({ color:0x0088ff, emissive:0x0055ff, emissiveIntensity:2, roughness:0.1, metalness:0.8, wireframe: true });
     const core = new THREE.Mesh(new THREE.TorusKnotGeometry(0.6, 0.2, 100, 16), coreMat);
     core.position.y = 2.0; group.add(core);
     coreRef.mesh = core;
 
-    // Glowing Inner Sphere
     const innerSphere = new THREE.Mesh(new THREE.SphereGeometry(0.4, 32, 32), new THREE.MeshBasicMaterial({color: 0x00ffff}));
     innerSphere.position.y = 2.0; group.add(innerSphere);
     coreRef.inner = innerSphere;
@@ -342,7 +361,6 @@
     light.position.y = 2.0; group.add(light);
     coreRef.light = light;
 
-    // Floating Rings
     coreRef.rings = [];
     const ringMat = new THREE.MeshStandardMaterial({ color:0x333333, metalness: 1, roughness: 0 });
     for(let i=0; i<3; i++){
@@ -359,14 +377,13 @@
   })();
 
   // ============================================================
-  // COLLECTIBLES & ANOMALIES
+  // COLLECTIBLES
   // ============================================================
   const components = [];
   const compMat = new THREE.MeshStandardMaterial({ color:0xffaa00, emissive:0xffaa00, emissiveIntensity:1.5, roughness:0.2, metalness:0.8 });
   [{x:1,z:-8},{x:-14,z:-6},{x:10,z:6},{x:-10,z:-12},{x:8,z:-3}].forEach(p=>{
     const group = new THREE.Group();
-    const geo = new THREE.OctahedronGeometry(0.25, 0); // Cool floating crystal shape
-    const mesh = new THREE.Mesh(geo, compMat);
+    const mesh = new THREE.Mesh(new THREE.OctahedronGeometry(0.25, 0), compMat);
     group.add(mesh);
     const light = new THREE.PointLight(0xffaa00, 1, 4); group.add(light);
     group.position.set(p.x, 1.2, p.z); scene.add(group);
@@ -386,13 +403,11 @@
   });
 
   // ============================================================
-  // AUDIO (Web Audio API - Procedural)
+  // AUDIO
   // ============================================================
   let actx = null;
   function ensureAudio(){
-    if(!actx) {
-        try{ actx = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){}
-    }
+    if(!actx) { try{ actx = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} }
     if(actx && actx.state === 'suspended') actx.resume();
   }
   function beep(freq,dur,type,gain){
@@ -405,17 +420,15 @@
   }
   function playThunder() {
     if(!actx) return;
-    const bufferSize = actx.sampleRate * 2.0; // 2 seconds of noise
+    const bufferSize = actx.sampleRate * 2.0; 
     const buffer = actx.createBuffer(1, bufferSize, actx.sampleRate);
     const data = buffer.getChannelData(0);
     for (let i = 0; i < bufferSize; i++) { data[i] = Math.random() * 2 - 1; }
-    
     const noise = actx.createBufferSource(); noise.buffer = buffer;
-    const filter = actx.createBiquadFilter(); filter.type = 'lowpass'; filter.frequency.value = 400; // Deep rumble
+    const filter = actx.createBiquadFilter(); filter.type = 'lowpass'; filter.frequency.value = 400;
     const gain = actx.createGain(); 
     gain.gain.setValueAtTime(1, actx.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.01, actx.currentTime + 2);
-    
     noise.connect(filter); filter.connect(gain); gain.connect(actx.destination);
     noise.start();
   }
@@ -423,19 +436,82 @@
   function sfxComplete(){ beep(440,0.2,'square',0.1); setTimeout(()=>beep(660,0.2,'square',0.1),200); setTimeout(()=>beep(880,0.5,'square',0.1),400); }
 
   // ============================================================
-  // PLAYER & GAME STATE
+  // CALCULATOR LOGIC
+  // ============================================================
+  let calcOpen = false;
+  let calcExpr = '';
+  const calcScreen = document.getElementById('calcScreen');
+  const calcGrid = document.getElementById('calcGrid');
+  const calcKeys = ['7','8','9','÷','4','5','6','×','1','2','3','-','0','.','C','+','='];
+  
+  calcKeys.forEach(k=>{
+    const btn = document.createElement('div');
+    btn.className = 'calcKey' + (['÷','×','-','+'].includes(k)?' op':'') + (k==='='?' eq':'') + (k==='C'?' clear':'');
+    btn.textContent = k;
+    btn.addEventListener('click', ()=> calcPress(k));
+    calcGrid.appendChild(btn);
+  });
+  
+  function calcPress(k){
+    beep(500,0.05,'square',0.06);
+    if(k==='C'){ calcExpr=''; }
+    else if(k==='='){
+      try{
+        const safe = calcExpr.replace(/×/g,'*').replace(/÷/g,'/');
+        if(!/^[0-9+\-*/.\s]+$/.test(safe)) throw new Error('bad');
+        const result = Function('"use strict";return ('+safe+')')();
+        calcExpr = (Math.round(result*1e6)/1e6).toString();
+      }catch(e){ calcExpr = 'Error'; }
+    } else {
+      if(calcExpr==='Error') calcExpr='';
+      calcExpr += k;
+    }
+    calcScreen.textContent = calcExpr || '0';
+  }
+
+  function toggleCalc(){ calcOpen ? closeCalc() : openCalc(); }
+  function openCalc(){
+    calcOpen = true;
+    document.getElementById('calcModal').classList.remove('hidden');
+    if(document.pointerLockElement===canvas) document.exitPointerLock();
+  }
+  function closeCalc(){
+    calcOpen = false;
+    document.getElementById('calcModal').classList.add('hidden');
+    if(gameState === 'playing') canvas.requestPointerLock();
+  }
+  document.getElementById('closeCalcBtn').addEventListener('click', closeCalc);
+
+  // ============================================================
+  // PLAYER & CONTROLS
   // ============================================================
   const player = { x:6, z:8, y:0, vy:0, grounded:true, yaw:Math.PI, pitch:0, radius:0.5, eyeHeight:1.7, speed:6, runSpeed:10 };
-  let gameState = 'menu'; // 'menu', 'cinematic', 'playing', 'win'
+  let gameState = 'menu';
   const keys = {};
 
-  document.addEventListener('keydown', e=>{ keys[e.code]=true; });
+  document.addEventListener('keydown', e=>{ 
+    keys[e.code]=true; 
+    if(gameState === 'playing' && e.code==='KeyC'){ toggleCalc(); }
+    if(e.code==='Escape' && calcOpen){ closeCalc(); }
+    
+    // Numpad support for calculator
+    if(calcOpen) {
+        if(/^[0-9]$/.test(e.key)) calcPress(e.key);
+        else if(e.key==='.') calcPress('.');
+        else if(e.key==='+') calcPress('+');
+        else if(e.key==='-') calcPress('-');
+        else if(e.key==='*') calcPress('×');
+        else if(e.key==='/') calcPress('÷');
+        else if(e.key==='Enter') calcPress('=');
+        else if(e.key==='Backspace'){ calcExpr = calcExpr.slice(0,-1); calcScreen.textContent = calcExpr||'0'; }
+    }
+  });
   document.addEventListener('keyup', e=>{ keys[e.code]=false; });
 
   let pointerLocked = false;
   const MOUSE_SENS = 0.002;
   document.addEventListener('mousemove', e=>{
-    if(!pointerLocked || gameState !== 'playing') return;
+    if(!pointerLocked || gameState !== 'playing' || calcOpen) return;
     player.yaw -= e.movementX*MOUSE_SENS;
     player.pitch -= e.movementY*MOUSE_SENS;
     const lim = Math.PI/2-0.05;
@@ -443,12 +519,10 @@
   });
 
   canvas.addEventListener('click', ()=>{
-    if(gameState === 'playing' && !pointerLocked) { canvas.requestPointerLock(); return; }
-    if(gameState === 'playing' && pointerLocked) interact();
+    if(gameState === 'playing' && !calcOpen && !pointerLocked) { canvas.requestPointerLock(); return; }
+    if(gameState === 'playing' && pointerLocked && !calcOpen) interact();
   });
-  document.addEventListener('pointerlockchange', ()=>{
-    pointerLocked = (document.pointerLockElement===canvas);
-  });
+  document.addEventListener('pointerlockchange', ()=>{ pointerLocked = (document.pointerLockElement===canvas); });
 
   const missions = { m1:{ progress:0, total:5 }, m2:{ progress:0, total:5 }, m3:{ done:false } };
   function updateMissionUI(){
@@ -471,9 +545,6 @@
     wrap.appendChild(t); setTimeout(()=>t.remove(), 3400);
   }
 
-  // ============================================================
-  // GAME LOGIC
-  // ============================================================
   const raycaster = new THREE.Raycaster();
   function interact(){
     raycaster.setFromCamera({x:0,y:0}, camera);
@@ -490,16 +561,12 @@
 
   function tryMove(nx,nz){
     if(nx>ROOM_X-0.5 || nx<-ROOM_X+0.5 || nz>ROOM_Z-0.5 || nz<-ROOM_Z+0.5) {
-        // Allow entering corridor
         if(!(nx>=-12.5 && nx<=-9.5 && nz<-10)) return false; 
     }
-    for(const o of obstacles) {
-      if(Math.hypot(nx-o.x, nz-o.z) < o.r+player.radius) return false;
-    }
+    for(const o of obstacles) { if(Math.hypot(nx-o.x, nz-o.z) < o.r+player.radius) return false; }
     return true;
   }
 
-  // Cinematic Intro Sequence
   function startCinematic() {
     gameState = 'cinematic';
     document.getElementById('menu').classList.add('hidden');
@@ -508,23 +575,18 @@
     
     const startCam = { x: -10, y: 5, z: -12, yaw: Math.PI/4, pitch: -0.2 };
     const endCam = { x: spawn.x, y: spawn.y + player.eyeHeight, z: spawn.z, yaw: spawn.yaw, pitch: 0 };
-    
-    camera.position.set(startCam.x, startCam.y, startCam.z);
-    camera.rotation.set(startCam.pitch, startCam.yaw, 0);
+    camera.position.set(startCam.x, startCam.y, startCam.z); camera.rotation.set(startCam.pitch, startCam.yaw, 0);
 
     new TWEEN.Tween(startCam)
-        .to(endCam, 6000) // 6 seconds intro
+        .to(endCam, 6000)
         .easing(TWEEN.Easing.Quadratic.InOut)
-        .onUpdate(() => {
-            camera.position.set(startCam.x, startCam.y, startCam.z);
-            camera.rotation.set(startCam.pitch, startCam.yaw, 0);
-        })
+        .onUpdate(() => { camera.position.set(startCam.x, startCam.y, startCam.z); camera.rotation.set(startCam.pitch, startCam.yaw, 0); })
         .onComplete(endCinematic)
         .start();
   }
 
   function endCinematic() {
-    if(gameState === 'playing') return; // Already skipped
+    if(gameState === 'playing') return;
     TWEEN.removeAll();
     gameState = 'playing';
     document.getElementById('cinematicBars').classList.remove('cinematic-active');
@@ -532,7 +594,6 @@
     document.getElementById('skipCinematic').style.display = 'none';
     document.getElementById('hud').classList.remove('hidden');
     document.getElementById('crosshair').classList.add('visible');
-    
     player.x = spawn.x; player.z = spawn.z; player.yaw = spawn.yaw;
     canvas.requestPointerLock();
   }
@@ -547,54 +608,38 @@
   function animate(time){
     requestAnimationFrame(animate);
     TWEEN.update(time);
-    
     const dt = Math.min(0.05, clock.getDelta());
     const t = clock.elapsedTime;
 
-    // Weather Effects Updates
     const positions = rainGeo.attributes.position.array;
     for(let i=0; i<rainCount; i++){
-        positions[i*3+1] -= rainVel[i] * (dt*60); // Drop Y
-        if(positions[i*3+1] < -5) {
-            positions[i*3+1] = 25; // Reset to top
-        }
+        positions[i*3+1] -= rainVel[i] * (dt*60);
+        if(positions[i*3+1] < -5) positions[i*3+1] = 25;
     }
     rainGeo.attributes.position.needsUpdate = true;
 
-    // Random Lightning
     thunderTimer -= dt;
     if(thunderTimer <= 0) {
         if(Math.random() < 0.1) {
-            lightningLight.intensity = 5; // Flash
+            lightningLight.intensity = 5;
             setTimeout(() => { lightningLight.intensity = 0; }, 50);
             setTimeout(() => { lightningLight.intensity = 3; }, 150);
             setTimeout(() => { lightningLight.intensity = 0; }, 250);
-            
-            // Play thunder sound delayed based on distance (simulated)
             setTimeout(playThunder, rand(500, 1500));
         }
-        thunderTimer = rand(3, 10); // Next lightning in 3-10s
+        thunderTimer = rand(3, 10);
     }
 
-    // Update Interactive Monitor
     monitors.forEach(m => {
         m.timer += dt;
-        if(m.timer > 0.1) {
-            const dist = Math.hypot(player.x - (-13), player.z - (-3));
-            drawMonitor(m, dist);
-            m.timer = 0;
-        }
+        if(m.timer > 0.1) { drawMonitor(m, Math.hypot(player.x - (-13), player.z - (-3))); m.timer = 0; }
     });
 
-    // Update 3D Core Device
     coreRef.mesh.rotation.x += dt * 0.5;
     coreRef.mesh.rotation.y += dt * 0.8;
-    coreRef.rings.forEach(r => {
-        r.mesh.rotateOnAxis(r.axis, dt * r.speed);
-    });
+    coreRef.rings.forEach(r => { r.mesh.rotateOnAxis(r.axis, dt * r.speed); });
 
-    if(gameState === 'playing'){
-      // Movement
+    if(gameState === 'playing' && !calcOpen){
       const forward = new THREE.Vector3(Math.sin(player.yaw),0,Math.cos(player.yaw));
       const right = new THREE.Vector3(Math.sin(player.yaw+Math.PI/2),0,Math.cos(player.yaw+Math.PI/2));
       let mx=0, mz=0;
@@ -616,7 +661,6 @@
       camera.rotation.y = player.yaw;
       camera.rotation.x = player.pitch;
 
-      // Item Collection
       components.forEach(c=>{
         if(!c.alive) return;
         c.mesh.rotation.y += dt*2;
@@ -629,50 +673,30 @@
         }
       });
 
-      // Anomaly Animation
       anomalies.forEach(a=>{
         if(!a.alive) return;
-        a.mesh.rotation.x += dt*1.5;
-        a.mesh.rotation.y += dt*2;
-        // Jitter effect
+        a.mesh.rotation.x += dt*1.5; a.mesh.rotation.y += dt*2;
         a.mesh.position.set(rand(-0.05,0.05), rand(-0.05,0.05), rand(-0.05,0.05));
       });
 
-      // Win Condition check
       if(!missions.m3.done && Math.hypot(player.x-devicePos.x, player.z-devicePos.z) < 3.5){
         if(missions.m1.progress===5 && missions.m2.progress===5){
           missions.m3.done = true; updateMissionUI(); sfxComplete();
-          coreRef.mesh.material.color.setHex(0x00ffaa); // Change color to green/safe
+          coreRef.mesh.material.color.setHex(0x00ffaa);
           coreRef.mesh.material.emissive.setHex(0x00ffaa);
           coreRef.light.color.setHex(0x00ffaa);
           toast('REAKTOR STABIL. SIMULASI SELESAI.', 'dialog');
-          
-          setTimeout(()=>{
-            document.exitPointerLock();
-            gameState = 'win';
-            document.getElementById('winscreen').classList.remove('hidden');
-          }, 2000);
+          setTimeout(()=>{ document.exitPointerLock(); gameState = 'win'; document.getElementById('winscreen').classList.remove('hidden'); }, 2000);
         }
       }
     }
-    
     renderer.render(scene, camera);
   }
 
-  // ============================================================
-  // BOOT
-  // ============================================================
-  window.addEventListener('resize', ()=>{
-    camera.aspect = window.innerWidth/window.innerHeight; camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
-  });
-  
-  // Remove loading screen
+  window.addEventListener('resize', ()=>{ camera.aspect = window.innerWidth/window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight); });
   document.getElementById('loading').classList.add('hidden');
   document.getElementById('menu').classList.remove('hidden');
-  
   animate();
-
 })();
 </script>
 </body>
