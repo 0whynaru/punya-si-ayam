@@ -3,141 +3,135 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ruang Waktu — Ultimate Edition</title>
+<title>Ruang Waktu — Containment Breach</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;700;900&family=Space+Mono:wght@400;700&family=Creepster&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tween.js/18.6.4/tween.umd.js"></script>
 <style>
   :root{
-    --bg:#0a0d14; --glass:rgba(20,25,35,0.7); --glass-strong:rgba(10,15,25,0.9);
-    --glass-border:rgba(255,255,255,0.15); --sage:#00ffcc; --sage-dim:#0088aa;
-    --amber:#ffaa00; --rose:#ff3366; --danger:#ff3333; --text:#e0f0ff; --dim:#8899aa;
+    --bg:#020202; --glass:rgba(15,0,0,0.8); --glass-strong:rgba(5,0,0,0.95);
+    --glass-border:rgba(255,0,50,0.3); --sage:#ff1a1a; --sage-dim:#800000;
+    --amber:#ffaa00; --text:#ffcccc; --dim:#aa6666;
   }
   *{box-sizing:border-box; margin:0; padding:0; user-select:none;}
-  html,body{ width:100%; height:100%; overflow:hidden; background:var(--bg); font-family:'Inter',sans-serif; color:var(--text); }
-  #game{ position:fixed; inset:0; display:block; }
+  html,body{ width:100%; height:100%; overflow:hidden; background:var(--bg); font-family:'Poppins',sans-serif; color:var(--text); }
+  #game{ position:fixed; inset:0; display:block; filter: contrast(1.1) brightness(0.9) saturate(1.2); }
   .hidden{ display:none !important; }
   .mono{ font-family:'Space Mono', monospace; }
 
-  #vignette{ position:fixed; inset:0; z-index:15; pointer-events:none; box-shadow: inset 0 0 250px 100px rgba(0,0,0,0.85); }
+  /* OVERLAYS & VIGNETTE */
+  #vignette{ position:fixed; inset:0; z-index:15; pointer-events:none; box-shadow: inset 0 0 300px 150px rgba(0,0,0,0.95); }
+  #glitchOverlay{ position:fixed; inset:0; z-index:16; pointer-events:none; background:rgba(255,0,0,0.1); opacity:0; mix-blend-mode:overlay; transition:opacity 0.1s; }
 
-  /* OVERLAYS */
-  .overlay{
-    position:fixed; inset:0; z-index:50; display:flex; flex-direction:column; align-items:center; justify-content:center;
-    background: radial-gradient(ellipse at center, rgba(10,15,25,0.95) 0%, rgba(2,5,10,0.98) 100%);
-    text-align:center; padding:24px;
-  }
-  .title-main{ font-family:'Poppins'; font-weight:800; font-size:clamp(36px, 7vw, 72px); letter-spacing:2px; margin-bottom:16px; text-shadow:0 0 20px rgba(255,255,255,0.2); }
-  .title-main span{ color:var(--sage); text-shadow:0 0 30px rgba(0,255,204,0.6); }
+  .overlay{ position:fixed; inset:0; z-index:50; display:flex; flex-direction:column; align-items:center; justify-content:center; background: radial-gradient(circle, rgba(20,0,0,0.95) 0%, #000 100%); text-align:center; padding:24px; }
+  .title-main{ font-family:'Creepster', cursive; font-size:clamp(48px, 10vw, 100px); letter-spacing:5px; margin-bottom:10px; color:#ff1a1a; text-shadow:0 0 20px #ff0000; animation: pulseRed 2s infinite; }
+  @keyframes pulseRed { 0%{text-shadow:0 0 10px #f00;} 50%{text-shadow:0 0 40px #f00, 0 0 10px #fff;} 100%{text-shadow:0 0 10px #f00;} }
   .subtitle{ font-size:16px; color:var(--dim); margin-bottom:40px; max-width:600px; line-height:1.6; }
 
   .rules{ display:flex; flex-wrap:wrap; justify-content:center; gap:12px; margin-bottom:40px; max-width: 800px;}
-  .rule{ background:var(--glass); border:1px solid var(--glass-border); border-radius:12px; padding:12px 16px; font-size:13px; backdrop-filter:blur(10px); min-width: 120px;}
-  .rule b{ display:block; color:var(--sage); font-size:18px; margin-bottom:4px; font-family:'Poppins'; }
+  .rule{ background:var(--glass); border:1px solid var(--glass-border); border-radius:8px; padding:12px 16px; font-size:13px; backdrop-filter:blur(5px); min-width:120px; box-shadow: inset 0 0 10px rgba(255,0,0,0.2);}
+  .rule b{ display:block; color:var(--sage); font-size:18px; margin-bottom:4px; font-weight:900; }
 
-  .btn{
-    font-family:'Poppins'; font-weight:700; letter-spacing:1px; font-size:16px; text-transform:uppercase;
-    color:#001122; background: linear-gradient(135deg, var(--sage), var(--sage-dim));
-    border:none; border-radius:16px; padding:18px 48px; cursor:pointer;
-    box-shadow: 0 10px 30px rgba(0,255,204,0.3), inset 0 -3px 0 rgba(0,0,0,0.2); transition:all 0.2s;
-  }
-  .btn:hover{ transform:translateY(-3px) scale(1.02); box-shadow:0 15px 40px rgba(0,255,204,0.5), inset 0 -3px 0 rgba(0,0,0,0.2); }
+  .btn{ font-family:'Space Mono'; font-weight:700; letter-spacing:2px; font-size:18px; text-transform:uppercase; color:#fff; background: transparent; border:2px solid var(--sage); border-radius:4px; padding:18px 48px; cursor:pointer; box-shadow: 0 0 20px rgba(255,0,0,0.3), inset 0 0 10px rgba(255,0,0,0.2); transition:all 0.1s; }
+  .btn:hover{ background:var(--sage); color:#000; box-shadow:0 0 40px rgba(255,0,0,0.8); }
 
   /* CINEMATIC BARS */
   #cinematicBars{ position:fixed; inset:0; z-index:25; pointer-events:none; display:flex; flex-direction:column; justify-content:space-between; transition:opacity 1s ease; }
   .cinematic-bar{ height:0vh; background:#000; width:100%; transition:height 1.5s cubic-bezier(0.4, 0, 0.2, 1); }
   .cinematic-active .cinematic-bar{ height:15vh; }
-  #skipCinematic{ position:absolute; bottom:30px; right:30px; color:white; z-index:35; background:rgba(0,0,0,0.5); padding:10px 20px; border-radius:8px; border:1px solid white; cursor:pointer; font-family:'Poppins'; pointer-events:auto; display:none; }
+  #skipCinematic{ position:absolute; bottom:30px; right:30px; color:#fff; z-index:35; background:rgba(255,0,0,0.2); padding:10px 20px; border:1px solid red; cursor:pointer; pointer-events:auto; display:none; font-family:'Space Mono'; }
 
   /* HUD */
   #hud{ position:fixed; inset:0; z-index:10; pointer-events:none; }
-  #crosshair{ position:absolute; top:50%; left:50%; width:6px; height:6px; background:var(--sage); border-radius:50%; transform:translate(-50%,-50%); opacity:0; transition:opacity 0.5s; box-shadow:0 0 10px var(--sage); }
+  #crosshair{ position:absolute; top:50%; left:50%; width:4px; height:4px; background:rgba(255,255,255,0.5); border-radius:50%; transform:translate(-50%,-50%); opacity:0; transition:all 0.2s; pointer-events:none; }
   #crosshair.visible{ opacity:1; }
+  #crosshair.active{ width:16px; height:16px; background:transparent; border:2px solid red; box-shadow:0 0 10px red; }
 
-  #missionPanel{ position:absolute; top:24px; left:24px; width:280px; background:var(--glass); border:1px solid var(--glass-border); border-radius:20px; padding:20px; backdrop-filter:blur(12px); }
-  #missionPanel h3{ font-family:'Poppins'; font-size:14px; letter-spacing:2px; color:var(--amber); margin-bottom:16px; }
+  #missionPanel{ position:absolute; top:24px; left:24px; width:280px; background:var(--glass); border:1px solid var(--glass-border); padding:20px; border-radius:4px; }
+  #missionPanel h3{ font-family:'Space Mono'; font-size:14px; letter-spacing:2px; color:#ff0000; margin-bottom:16px; border-bottom:1px solid red; padding-bottom:5px; }
   .mission-item{ margin-bottom:12px; }
-  .mission-name{ font-size:13px; font-weight:600; display:flex; justify-content:space-between; margin-bottom:6px; }
-  .mission-item.done .mission-name{ color:var(--sage); text-shadow:0 0 5px var(--sage); }
-  .bar-track{ height:4px; border-radius:4px; background:rgba(0,0,0,0.5); overflow:hidden; }
-  .bar-fill{ height:100%; background:var(--sage); width:0%; transition:width 0.4s; }
+  .mission-name{ font-size:13px; font-weight:600; display:flex; justify-content:space-between; margin-bottom:6px; color:#ddd;}
+  .mission-item.done .mission-name{ color:#555; text-decoration: line-through; }
+  .bar-track{ height:2px; background:rgba(255,0,0,0.2); }
+  .bar-fill{ height:100%; background:#f00; width:0%; transition:width 0.4s; box-shadow:0 0 10px red; }
 
-  /* STAMINA BAR */
   #staminaWrap{ position:absolute; bottom:30px; left:24px; width:250px; }
-  .hud-label{ font-family:'Poppins'; font-size:12px; font-weight:700; letter-spacing:1px; color:var(--dim); margin-bottom:6px; text-transform:uppercase; }
-  #staminaTrack{ height:8px; background:rgba(0,0,0,0.6); border:1px solid rgba(255,255,255,0.2); border-radius:10px; overflow:hidden; }
-  #staminaFill{ height:100%; background:linear-gradient(90deg, #ffcc00, #ff6600); width:100%; transition:width 0.1s linear, background-color 0.3s; }
+  .hud-label{ font-family:'Space Mono'; font-size:12px; font-weight:700; color:#888; margin-bottom:6px; }
+  #staminaTrack{ height:4px; background:rgba(255,0,0,0.2); border:1px solid rgba(255,0,0,0.5); }
+  #staminaFill{ height:100%; background:#f00; width:100%; box-shadow:0 0 8px red; }
 
-  /* QUICK KEYS */
-  #quickKeys{ position:absolute; bottom:30px; right:24px; display:flex; gap:15px; }
-  .q-key{ background:var(--glass); border:1px solid var(--glass-border); padding:10px 15px; border-radius:12px; color:var(--dim); text-align:center; backdrop-filter:blur(8px); transition:all 0.2s; }
-  .q-key b{ display:block; color:var(--text); font-family:'Poppins'; font-size:18px; margin-bottom:2px; }
-  .q-key.active{ border-color:var(--sage); color:var(--sage); box-shadow:0 0 15px rgba(0,255,204,0.2); }
-  .q-key.active b{ color:var(--sage); }
+  #quickKeys{ position:absolute; bottom:30px; right:24px; display:flex; gap:10px; }
+  .q-key{ background:var(--glass); border:1px solid #440000; padding:10px; border-radius:4px; color:#888; text-align:center; font-family:'Space Mono'; font-size:11px; transition:all 0.2s; }
+  .q-key b{ display:block; color:#ccc; font-size:16px; margin-bottom:2px; }
+  .q-key.active{ border-color:red; color:red; box-shadow:inset 0 0 10px rgba(255,0,0,0.5); }
+  .q-key.active b{ color:red; }
 
-  /* TOASTS */
   #toastWrap{ position:absolute; top:24px; left:50%; transform:translateX(-50%); display:flex; flex-direction:column; gap:10px; width:min(90vw,400px); }
-  .toast{ background:var(--glass-strong); border:1px solid var(--glass-border); border-left:4px solid var(--sage); border-radius:12px; padding:14px 20px; font-size:14px; animation:toastIn 0.3s, toastOut 0.5s ease 3s forwards; backdrop-filter:blur(10px); }
-  @keyframes toastIn{ from{opacity:0; transform:translateY(-20px);} to{opacity:1; transform:translateY(0);} }
+  .toast{ background:var(--glass-strong); border:1px solid red; padding:14px 20px; font-size:14px; font-family:'Space Mono'; color:#fff; animation:toastIn 0.2s, toastOut 0.5s ease 3s forwards; border-left:4px solid red; }
+  @keyframes toastIn{ from{opacity:0; transform:scale(0.9);} to{opacity:1; transform:scale(1);} }
   @keyframes toastOut{ to{opacity:0;} }
 
-  /* SMARTPHONE UI */
-  #phoneUI{
-    position:absolute; bottom:20px; right:120px; width:280px; height:520px; background:#11141a; border:8px solid #222633; border-radius:36px; border-bottom-width:24px; border-top-width:24px; box-shadow:0 20px 50px rgba(0,0,0,0.8), inset 0 0 10px rgba(0,0,0,1);
-    transform:translateY(120%) rotate(5deg); transition:transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1); pointer-events:auto; z-index:30; display:flex; flex-direction:column;
-  }
+  /* SMARTPHONE (HORROR UI) */
+  #phoneUI{ position:absolute; bottom:20px; right:120px; width:300px; height:550px; background:#050000; border:4px solid #300; border-radius:24px; box-shadow:0 0 50px rgba(255,0,0,0.3); transform:translateY(120%) rotate(5deg); transition:transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); pointer-events:auto; z-index:30; display:flex; flex-direction:column; overflow:hidden; }
   #phoneUI.open{ transform:translateY(0) rotate(0deg); }
-  .phone-header{ padding:10px 15px; display:flex; justify-content:space-between; font-size:12px; color:#8899aa; border-bottom:1px solid rgba(255,255,255,0.05); }
-  .phone-content{ flex:1; padding:15px; overflow-y:auto; font-size:13px; display:flex; flex-direction:column; gap:12px; }
-  .msg-box{ background:rgba(255,255,255,0.05); padding:12px; border-radius:12px; border-left:3px solid var(--sage); animation:msgIn 0.3s; }
-  .msg-box.sys{ border-left-color:var(--danger); }
-  .msg-sender{ font-weight:700; font-family:'Poppins'; margin-bottom:4px; font-size:12px; color:var(--amber); }
+  .phone-header{ padding:10px 15px; display:flex; justify-content:space-between; font-size:12px; font-family:'Space Mono'; color:red; border-bottom:1px solid #300; background:#100; }
+  .phone-content{ flex:1; padding:15px; overflow-y:auto; display:flex; flex-direction:column; gap:12px; font-family:'Space Mono'; font-size:12px; }
+  .sys-data{ background:rgba(255,0,0,0.1); border:1px dashed red; padding:10px; color:#ffaaaa; text-align:center; font-weight:bold; }
+  .msg-box{ background:#100; border:1px solid #300; padding:12px; border-left:3px solid red; color:#ddd; animation:msgIn 0.3s; }
+  .msg-sender{ font-weight:700; color:red; margin-bottom:6px; font-size:11px; letter-spacing:1px; border-bottom:1px solid #300; padding-bottom:4px; }
   @keyframes msgIn{ from{opacity:0; transform:translateX(20px);} to{opacity:1; transform:translateX(0);} }
-  .phone-home-btn{ position:absolute; bottom:-18px; left:50%; transform:translateX(-50%); width:40px; height:6px; background:rgba(255,255,255,0.2); border-radius:10px; cursor:pointer; }
+  .phone-home-btn{ position:absolute; bottom:10px; left:50%; transform:translateX(-50%); width:50px; height:6px; background:#300; border-radius:10px; cursor:pointer; }
+  .phone-home-btn:hover{ background:red; box-shadow:0 0 10px red; }
 
   /* CALCULATOR MODAL */
-  .modal{ position:fixed; inset:0; z-index:40; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,0.7); backdrop-filter:blur(6px); pointer-events:auto; }
-  .modalBox{ background:#111; border:1px solid var(--sage); border-radius:20px; padding:24px; width:320px; }
-  #calcScreen{ background:#000; padding:16px; font-family:'Space Mono'; font-size:32px; color:var(--sage); text-align:right; border-radius:12px; margin-bottom:16px; border:1px solid #333; }
+  .modal{ position:fixed; inset:0; z-index:40; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,0.85); backdrop-filter:blur(4px); pointer-events:auto; }
+  .modalBox{ background:#0a0000; border:1px solid red; padding:24px; width:320px; box-shadow:0 0 50px rgba(255,0,0,0.2); }
+  .modalTitle{ font-family:'Space Mono'; font-size:14px; color:red; text-align:center; margin-bottom:15px; letter-spacing:2px; }
+  #calcScreen{ background:#000; padding:16px; font-family:'Space Mono'; font-size:32px; color:red; text-align:right; margin-bottom:16px; border:1px solid #300; text-shadow:0 0 10px red; }
   #calcGrid{ display:grid; grid-template-columns:repeat(4,1fr); gap:8px; }
-  .calcKey{ padding:15px 0; background:#222; color:#fff; text-align:center; border-radius:8px; cursor:pointer; font-weight:600; }
-  .calcKey:hover{ background:var(--sage-dim); color:#fff; }
-  .calcKey.eq{ background:var(--sage); color:#000; grid-column:span 2; }
+  .calcKey{ padding:15px 0; background:#100; border:1px solid #300; color:#f55; text-align:center; cursor:pointer; font-family:'Space Mono'; font-weight:700; font-size:18px; transition:all 0.1s; }
+  .calcKey:hover{ background:red; color:#000; box-shadow:0 0 15px red; }
+  .calcKey.eq{ background:red; color:#000; grid-column:span 2; }
+  .closeBtn{ width:100%; padding:12px; margin-top:15px; background:transparent; border:1px solid red; color:red; font-family:'Space Mono'; cursor:pointer; text-transform:uppercase; transition:0.2s; }
+  .closeBtn:hover{ background:red; color:#000; }
+
+  /* TERMINAL MODAL (FOR REACTOR PASSWORD) */
+  #termScreen{ background:#001100; padding:20px; font-family:'Space Mono'; font-size:36px; color:#0f0; text-align:center; margin-bottom:20px; border:1px solid #0f0; text-shadow:0 0 10px #0f0; letter-spacing:10px; height:80px;}
+  #termScreen.error{ color:red; border-color:red; text-shadow:0 0 10px red; }
 </style>
 </head>
 <body>
 
 <canvas id="game"></canvas>
 <div id="vignette"></div>
+<div id="glitchOverlay"></div>
 
-<!-- CINEMATIC BARS -->
 <div id="cinematicBars" class="cinematic-active hidden">
   <div class="cinematic-bar"></div><div class="cinematic-bar"></div>
 </div>
-<button id="skipCinematic">Lewati Sinematik</button>
+<button id="skipCinematic">LEWATI</button>
 
 <!-- MAIN MENU -->
 <div id="menu" class="overlay">
-  <div class="title-main">RUANG <span>WAKTU</span>: APEX</div>
-  <div class="subtitle">Sistem Reaktor kritis akibat badai petir. Kamu adalah teknisi terakhir yang tersisa. Redakan anomali, pasang isolator, dan restart mesin.</div>
+  <div class="title-main">CONTAINMENT BREACH</div>
+  <div class="subtitle">Fasilitas RX-7 hancur. Kegelapan telah mengambil alih. Selesaikan teka-teki darurat untuk merestart Reaktor sebelum "Mereka" menemukanmu.</div>
   <div class="rules">
     <div class="rule"><b>WASD</b>Jalan</div>
     <div class="rule"><b>SHIFT</b>Lari</div>
-    <div class="rule"><b>SPASI</b>Lompat</div>
-    <div class="rule"><b>Mouse</b>Lihat / Klik</div>
     <div class="rule"><b>F</b>Senter</div>
-    <div class="rule"><b>H</b>Buka HP</div>
+    <div class="rule"><b>H</b>HP/Pesan</div>
     <div class="rule"><b>C</b>Kalkulator</div>
+    <div class="rule"><b>Klik</b>Interaksi</div>
   </div>
-  <button class="btn" id="startBtn">INISIALISASI SISTEM</button>
+  <button class="btn" id="startBtn">MASUKI KEGELAPAN</button>
 </div>
 
-<!-- WIN -->
-<div id="winscreen" class="overlay hidden">
-  <div class="title-main">REALITAS <span>DIAMANKAN</span></div>
-  <div class="subtitle">Anomali telah diredakan. Reaktor stabil. Kerja bagus, Operator.</div>
-  <button class="btn" onclick="location.reload()">Selesai</button>
+<!-- WIN/LOSE SCREEN -->
+<div id="endscreen" class="overlay hidden">
+  <div class="title-main" id="endTitle">SELAMAT TINGGAL</div>
+  <div class="subtitle" id="endSub">...</div>
+  <button class="btn" onclick="location.reload()">COBA LAGI</button>
 </div>
 
 <!-- HUD -->
@@ -145,21 +139,21 @@
   <div id="crosshair"></div>
   
   <div id="missionPanel">
-    <h3>Protokol Darurat</h3>
-    <div class="mission-item" id="m1"><div class="mission-name"><span>Isolator Inti</span><span class="count">0/5</span></div><div class="bar-track"><div class="bar-fill" id="m1bar"></div></div></div>
-    <div class="mission-item" id="m2"><div class="mission-name"><span>Netralisir Glitch</span><span class="count">0/5</span></div><div class="bar-track"><div class="bar-fill" id="m2bar"></div></div></div>
-    <div class="mission-item" id="m3"><div class="mission-name"><span>Restart Reaktor</span><span class="count">0/1</span></div><div class="bar-track"><div class="bar-fill" id="m3bar"></div></div></div>
+    <h3>STATUS MISI</h3>
+    <div class="mission-item" id="m1"><div class="mission-name"><span>Kumpulkan Isolator</span><span class="count">0/5</span></div><div class="bar-track"><div class="bar-fill" id="m1bar"></div></div></div>
+    <div class="mission-item" id="m2"><div class="mission-name"><span>Hancurkan Anomali</span><span class="count">0/3</span></div><div class="bar-track"><div class="bar-fill" id="m2bar"></div></div></div>
+    <div class="mission-item" id="m3"><div class="mission-name"><span>Input Kode Reaktor</span><span class="count">0/1</span></div><div class="bar-track"><div class="bar-fill" id="m3bar"></div></div></div>
   </div>
 
   <div id="staminaWrap">
-    <div class="hud-label">Stamina Operator</div>
+    <div class="hud-label">DETAK JANTUNG (STAMINA)</div>
     <div id="staminaTrack"><div id="staminaFill"></div></div>
   </div>
 
   <div id="quickKeys">
-    <div class="q-key" id="keyF"><b>F</b>Senter</div>
-    <div class="q-key" id="keyH"><b>H</b>Ponsel</div>
-    <div class="q-key" id="keyC"><b>C</b>Calc</div>
+    <div class="q-key" id="keyF"><b>F</b>SENTER</div>
+    <div class="q-key" id="keyH"><b>H</b>PONSEL</div>
+    <div class="q-key" id="keyC"><b>C</b>CALC</div>
   </div>
 
   <div id="toastWrap"></div>
@@ -167,14 +161,18 @@
 
 <!-- SMARTPHONE UI -->
 <div id="phoneUI">
-  <div class="phone-header">
-    <span class="mono" id="phoneTime">12:00</span>
-    <span>100% 🔋</span>
-  </div>
+  <div class="phone-header"><span id="phoneTime">03:33 AM</span><span>🔴 OFFLINE</span></div>
   <div class="phone-content" id="phoneMsgs">
-    <div class="msg-box sys">
-      <div class="msg-sender">SYSTEM ALERT</div>
-      Koneksi terputus. Mode darurat diaktifkan. Harap segera perbaiki reaktor.
+    <div class="sys-data">SENSOR SUHU REAKTOR:<br><span id="coreTempDisplay" style="font-size:24px;color:#fff;">312</span> °K</div>
+    <div class="msg-box">
+      <div class="msg-sender">KEPALA TEKNISI (ALM)</div>
+      Jika kamu membaca ini, aku sudah mati. Reaktor terkunci oleh sistem keamanan. Kamu harus menghitung kode override secara manual!
+    </div>
+    <div class="msg-box" style="border-color:#ffaa00;">
+      <div class="msg-sender">PROTOKOL DARURAT</div>
+      RUMUS KODE REAKTOR:<br><br>
+      <b>(SUHU * JUMLAH ISOLATOR) - 142</b><br><br>
+      <i>Catatan: Jumlah isolator yang tersebar di ruangan adalah 5 buah. Hitung dengan kalkulator (C), lalu masukkan ke terminal Reaktor!</i>
     </div>
   </div>
   <div class="phone-home-btn" onclick="togglePhone()"></div>
@@ -183,9 +181,24 @@
 <!-- CALCULATOR MODAL -->
 <div id="calcModal" class="modal hidden">
   <div class="modalBox">
+    <div class="modalTitle">KALKULATOR DARURAT</div>
     <div id="calcScreen">0</div>
     <div id="calcGrid"></div>
-    <button style="width:100%; padding:10px; margin-top:10px; background:none; border:1px solid #555; color:#fff; border-radius:8px; cursor:pointer;" onclick="toggleCalc()">Tutup</button>
+    <button class="closeBtn" onclick="toggleCalc()">TUTUP (ESC)</button>
+  </div>
+</div>
+
+<!-- TERMINAL MODAL -->
+<div id="termModal" class="modal hidden">
+  <div class="modalBox" style="width:400px; background:#001100; border-color:#0f0;">
+    <div class="modalTitle" style="color:#0f0;">TERMINAL REAKTOR</div>
+    <div id="termScreen">----</div>
+    <div id="termGrid" style="display:grid; grid-template-columns:repeat(3,1fr); gap:8px;"></div>
+    <div style="display:flex; gap:8px; margin-top:8px;">
+      <button class="calcKey" style="flex:1; background:#100; color:red; border-color:red;" onclick="termP('C')">CLEAR</button>
+      <button class="calcKey" style="flex:1; background:#030; color:#0f0; border-color:#0f0;" onclick="submitTerm()">ENTER</button>
+    </div>
+    <button class="closeBtn" style="color:#0f0; border-color:#0f0;" onclick="toggleTerm()">BATAL</button>
   </div>
 </div>
 
@@ -193,456 +206,338 @@
 (function(){
   "use strict";
 
-  // ==========================================
-  // SETUP THREE.JS
-  // ==========================================
+  // --- AUDIO PROCEDURAL (HORROR) ---
+  let actx = null;
+  function initAudio(){ if(!actx){ try{actx=new(window.AudioContext||window.webkitAudioContext)();}catch(e){} } if(actx && actx.state==='suspended') actx.resume(); }
+  function playTone(freq, dur, type, vol){
+    if(!actx) return; const o=actx.createOscillator(), g=actx.createGain();
+    o.type=type; o.frequency.value=freq; g.gain.setValueAtTime(vol, actx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, actx.currentTime+dur);
+    o.connect(g); g.connect(actx.destination); o.start(); o.stop(actx.currentTime+dur);
+  }
+  function playHeartbeat(){ playTone(50, 0.2, 'sine', 0.8); setTimeout(()=>playTone(55, 0.3, 'sine', 0.6), 250); }
+  function playJumpscare(){ playTone(150, 0.5, 'sawtooth', 0.5); playTone(800, 0.2, 'square', 0.3); }
+  function playThunder(){ playTone(40, 2.0, 'sawtooth', 0.6); }
+
+  // --- THREE.JS SETUP ---
   const canvas = document.getElementById('game');
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias:true, powerPreference:"high-performance" });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5)); // Optimized
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias:true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
   renderer.setSize(window.innerWidth, window.innerHeight);
-  renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-  renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 0.6; // Darker atmosphere
+  renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
   const scene = new THREE.Scene();
-  const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 500);
+  const camera = new THREE.PerspectiveCamera(70, window.innerWidth/window.innerHeight, 0.1, 500);
   camera.rotation.order = 'YXZ';
-  scene.background = new THREE.Color(0x020305);
-  scene.fog = new THREE.FogExp2(0x020305, 0.035); // Thicker fog
-  scene.add(camera); // Must add camera to scene to attach lights
+  scene.background = new THREE.Color(0x010101);
+  scene.fog = new THREE.FogExp2(0x010000, 0.08); // Thick dark red fog
+  scene.add(camera);
 
   // Utils
   function rand(min,max){ return Math.random()*(max-min)+min; }
-  function glowTexture(hex){
-    const c = document.createElement('canvas'); c.width=64;c.height=64;
-    const ctx = c.getContext('2d');
-    const grad = ctx.createRadialGradient(32,32,0,32,32,32);
-    const col = new THREE.Color(hex);
-    grad.addColorStop(0, `rgba(${Math.round(col.r*255)},${Math.round(col.g*255)},${Math.round(col.b*255)},1)`);
-    grad.addColorStop(1, `rgba(${Math.round(col.r*255)},${Math.round(col.g*255)},${Math.round(col.b*255)},0)`);
-    ctx.fillStyle = grad; ctx.fillRect(0,0,64,64);
-    return new THREE.CanvasTexture(c);
+  function glowTex(hex){
+    const c=document.createElement('canvas'); c.width=64;c.height=64; const ctx=c.getContext('2d');
+    const grad=ctx.createRadialGradient(32,32,0,32,32,32); const col=new THREE.Color(hex);
+    grad.addColorStop(0,`rgba(${Math.round(col.r*255)},${Math.round(col.g*255)},${Math.round(col.b*255)},1)`);
+    grad.addColorStop(1,`rgba(0,0,0,0)`); ctx.fillStyle=grad; ctx.fillRect(0,0,64,64); return new THREE.CanvasTexture(c);
   }
 
-  // ==========================================
-  // LIGHTING & ENVIRONMENT
-  // ==========================================
-  const ambient = new THREE.AmbientLight(0x0a1220, 0.5); // Very dark blue
-  scene.add(ambient);
-  
-  const lightning = new THREE.DirectionalLight(0xccddff, 0);
-  lightning.position.set(-50, 20, -10);
-  scene.add(lightning);
+  // --- LIGHTING ---
+  scene.add(new THREE.AmbientLight(0x050000, 1.0)); // Deep red ambient
+  const lightning = new THREE.DirectionalLight(0xffffff, 0); lightning.position.set(-50,20,-10); scene.add(lightning);
 
-  const roomFill = new THREE.PointLight(0xffaa55, 0.2, 15);
-  roomFill.position.set(0, 4, 0);
-  scene.add(roomFill);
+  const flashlight = new THREE.SpotLight(0xffffff, 0, 15, Math.PI/6, 0.5, 1.5);
+  flashlight.position.set(0,0,0); flashlight.target.position.set(0,0,-1);
+  camera.add(flashlight); camera.add(flashlight.target);
 
-  // FLASHLIGHT (Attached to camera)
-  const flashlight = new THREE.SpotLight(0xffffff, 0, 25, Math.PI/5, 0.4, 1.5);
-  flashlight.position.set(0,0,0);
-  flashlight.target.position.set(0,0,-1);
-  camera.add(flashlight);
-  camera.add(flashlight.target);
-
-  // RAIN
-  const rainCount = 2000;
-  const rainGeo = new THREE.BufferGeometry();
-  const rainPos = new Float32Array(rainCount * 3);
-  for(let i=0; i<rainCount; i++){
-    rainPos[i*3] = rand(-30, -16);
-    rainPos[i*3+1] = rand(-5, 20);
-    rainPos[i*3+2] = rand(-15, 15);
-  }
-  rainGeo.setAttribute('position', new THREE.BufferAttribute(rainPos, 3));
-  const rainMat = new THREE.PointsMaterial({ color:0x88bbff, size:0.1, transparent:true, opacity:0.6 });
-  const rainSystem = new THREE.Points(rainGeo, rainMat);
-  scene.add(rainSystem);
-
-  // ==========================================
-  // ROOM GEOMETRY
-  // ==========================================
-  const ROOM_X = 15.5, ROOM_Z = 10.5, ROOM_H = 8;
+  // --- ROOM ---
   const obstacles = [];
+  const floor = new THREE.Mesh(new THREE.PlaneGeometry(40,40), new THREE.MeshStandardMaterial({color:0x050505, roughness:0.8}));
+  floor.rotation.x = -Math.PI/2; floor.receiveShadow=true; scene.add(floor);
 
-  const floor = new THREE.Mesh(new THREE.PlaneGeometry(40,40), new THREE.MeshStandardMaterial({color:0x111214, roughness:0.2}));
-  floor.rotation.x = -Math.PI/2; floor.position.y = 0; floor.receiveShadow = true; scene.add(floor);
-
-  const wallMat = new THREE.MeshStandardMaterial({ color:0x1a1c22, roughness:0.9 });
-  function addW(x,z,ry,len,h){
-    const w = new THREE.Mesh(new THREE.PlaneGeometry(len, h||ROOM_H), wallMat);
-    w.position.set(x, (h||ROOM_H)/2, z); w.rotation.y = ry; scene.add(w);
-  }
-  addW(-ROOM_X,0,Math.PI/2,ROOM_Z*2); addW(ROOM_X,0,-Math.PI/2,ROOM_Z*2);
-  addW(-11,-ROOM_Z,0,9); addW(3.25,-ROOM_Z,0,24.5);
+  const wallMat = new THREE.MeshStandardMaterial({ color:0x111, roughness:1 });
+  function addW(x,z,ry,len){ const w=new THREE.Mesh(new THREE.PlaneGeometry(len, 8), wallMat); w.position.set(x,4,z); w.rotation.y=ry; scene.add(w); }
+  addW(-15.5,0,Math.PI/2,21); addW(15.5,0,-Math.PI/2,21); addW(-11,-10.5,0,9); addW(3.25,-10.5,0,24.5);
   addW(-13,-15.25,Math.PI/2,9.5); addW(-9,-15.25,-Math.PI/2,9.5); addW(-11,-20,0,4);
+  const glass = new THREE.Mesh(new THREE.PlaneGeometry(12,6), new THREE.MeshPhysicalMaterial({color:0x111, transmission:0.5}));
+  glass.position.set(-15.4, 4, -2); glass.rotation.y=Math.PI/2; scene.add(glass);
 
-  // Big Window
-  const glass = new THREE.Mesh(new THREE.PlaneGeometry(12, 6), new THREE.MeshPhysicalMaterial({ color:0x88bbff, transmission:0.9, opacity:1, roughness:0.1, side:THREE.DoubleSide }));
-  glass.position.set(-ROOM_X+0.1, 4, -2); glass.rotation.y = Math.PI/2; scene.add(glass);
+  // --- COMPUTER DESK (Start Point) ---
+  const desk = new THREE.Group();
+  desk.add(new THREE.Mesh(new THREE.BoxGeometry(3,0.1,1.5), new THREE.MeshStandardMaterial({color:0x000})));
+  const scrn = new THREE.Mesh(new THREE.PlaneGeometry(1.2,0.6), new THREE.MeshBasicMaterial({color:0xff0000}));
+  scrn.position.set(0,0.6,-0.2); desk.add(scrn);
+  desk.position.set(-13, 1, -3); desk.rotation.y=Math.PI/2; scene.add(desk); obstacles.push({x:-13,z:-3,r:1.5});
 
-  // ==========================================
-  // INTERACTIVE DESK (CINEMATIC FOCUS)
-  // ==========================================
-  const deskGroup = new THREE.Group();
-  const deskTop = new THREE.Mesh(new THREE.BoxGeometry(3,0.1,1.5), new THREE.MeshStandardMaterial({color:0x111}));
-  deskTop.position.y = 1.05; deskGroup.add(deskTop);
-  
-  // Monitor Screen (Procedural Text)
-  const c = document.createElement('canvas'); c.width=256; c.height=128;
-  const ctx = c.getContext('2d');
-  const tex = new THREE.CanvasTexture(c);
-  const screen = new THREE.Mesh(new THREE.PlaneGeometry(1.2,0.6), new THREE.MeshBasicMaterial({map:tex}));
-  screen.position.set(0, 1.6, -0.2); screen.rotation.x = -0.1; deskGroup.add(screen);
-  
-  const monLight = new THREE.PointLight(0x00ffcc, 0, 4); // Starts off
-  monLight.position.set(0, 1.6, 0.5); deskGroup.add(monLight);
+  // --- REACTOR TERMINAL (Puzzle Target) ---
+  const reactorPos = {x:-11, z:-18};
+  const termGroup = new THREE.Group();
+  const rBase = new THREE.Mesh(new THREE.CylinderGeometry(1.5, 1.8, 1, 16), new THREE.MeshStandardMaterial({color:0x111}));
+  termGroup.add(rBase);
+  const rCore = new THREE.Mesh(new THREE.IcosahedronGeometry(0.8, 1), new THREE.MeshStandardMaterial({color:0xff0000, emissive:0xaa0000, wireframe:true}));
+  rCore.position.y=1.5; termGroup.add(rCore);
+  const rLight = new THREE.PointLight(0xff0000, 2, 8); rLight.position.y=1.5; termGroup.add(rLight);
+  termGroup.position.set(reactorPos.x, 0, reactorPos.z); scene.add(termGroup);
+  obstacles.push({x:reactorPos.x, z:reactorPos.z, r:2.0});
 
-  deskGroup.position.set(-13, 0, -3); deskGroup.rotation.y = Math.PI/2;
-  scene.add(deskGroup); obstacles.push({x:-13, z:-3, r:1.5});
-
-  let monitorText = "";
-  let typeIndex = 0;
-  const fullText = "SYSTEM OVERRIDE DETECTED...\n\nERROR 404: REALITY NOT FOUND\nWARNING: REACTOR CRITICAL.\n\nWAKE UP, OPERATOR.";
-  function drawMonitorText(){
-    ctx.fillStyle = '#051a14'; ctx.fillRect(0,0,256,128);
-    ctx.font = '12px "Space Mono"'; ctx.fillStyle = '#00ffcc';
-    const lines = monitorText.split('\n');
-    lines.forEach((l,i)=> ctx.fillText(l, 10, 20 + i*16));
-    tex.needsUpdate = true;
-  }
-  drawMonitorText(); // initial black
-
-  // ==========================================
-  // REACTOR CORE & ENTITIES
-  // ==========================================
-  const devP = {x:-11, z:-17};
-  const coreRef = { rings:[] };
-  (function buildCore(){
-    const g = new THREE.Group();
-    const base = new THREE.Mesh(new THREE.CylinderGeometry(1.5, 1.8, 0.4, 32), new THREE.MeshStandardMaterial({color:0x111})); g.add(base);
-    const core = new THREE.Mesh(new THREE.TorusKnotGeometry(0.6, 0.2, 80, 16), new THREE.MeshStandardMaterial({color:0x0088ff, emissive:0x0055ff, emissiveIntensity:1, wireframe:true}));
-    core.position.y=2; g.add(core); coreRef.mesh = core;
-    const light = new THREE.PointLight(0x00aaff, 2, 10); light.position.y=2; g.add(light); coreRef.light = light;
-    
-    for(let i=0;i<3;i++){
-      const r = new THREE.Mesh(new THREE.TorusGeometry(1.2+i*0.3, 0.05, 16, 40), new THREE.MeshStandardMaterial({color:0x333, metalness:1}));
-      r.position.y=2; r.rotation.x=rand(0,Math.PI); g.add(r);
-      coreRef.rings.push({m:r, s:rand(0.5,1.5), ax:new THREE.Vector3(rand(-1,1),rand(-1,1),rand(-1,1)).normalize()});
-    }
-    g.position.set(devP.x, 0.2, devP.z); scene.add(g); obstacles.push({x:devP.x, z:devP.z, r:2.0});
-  })();
-
-  const components=[], anomalies=[];
-  const cMat = new THREE.MeshStandardMaterial({color:0xffaa00, emissive:0xffaa00, emissiveIntensity:1});
-  [{x:1,z:-8},{x:-14,z:-6},{x:10,z:6},{x:-10,z:-12},{x:8,z:-3}].forEach(p=>{
-    const g=new THREE.Group(), m=new THREE.Mesh(new THREE.OctahedronGeometry(0.25,0), cMat); g.add(m);
-    g.add(new THREE.PointLight(0xffaa00, 1, 4)); g.position.set(p.x,1.2,p.z); scene.add(g);
-    components.push({g, m, x:p.x, z:p.z, alive:true});
+  // --- COLLECTIBLES (Isolators) ---
+  const items=[], anomalies=[];
+  [{x:2,z:-8},{x:-14,z:-8},{x:10,z:5},{x:-10,z:-14},{x:8,z:-3}].forEach(p=>{
+    const m = new THREE.Mesh(new THREE.BoxGeometry(0.3,0.3,0.3), new THREE.MeshStandardMaterial({color:0x00ff00, emissive:0x00ff00}));
+    m.position.set(p.x, 1, p.z); scene.add(m); items.push({m, ...p, alive:true});
   });
 
-  const aMat = new THREE.MeshStandardMaterial({color:0x000, emissive:0xff3366, emissiveIntensity:2, wireframe:true});
-  [{x:4,z:7},{x:-7,z:3},{x:11,z:-5},{x:-12,z:-10},{x:3,z:-2}].forEach(p=>{
-    const g=new THREE.Group(), m=new THREE.Mesh(new THREE.IcosahedronGeometry(0.6,1), aMat); g.add(m);
-    const gl = new THREE.Sprite(new THREE.SpriteMaterial({map:glowTexture(0xff3366), blending:THREE.AdditiveBlending}));
-    gl.scale.set(2,2,1); g.add(gl); g.position.set(p.x,1.5,p.z); scene.add(g);
-    anomalies.push({g, m, x:p.x, z:p.z, alive:true});
+  // --- ANOMALIES (Enemies) ---
+  [{x:4,z:7},{x:-7,z:3},{x:11,z:-5}].forEach(p=>{
+    const g=new THREE.Group(), m=new THREE.Mesh(new THREE.SphereGeometry(0.5,8,8), new THREE.MeshStandardMaterial({color:0x000, emissive:0xff0000, wireframe:true}));
+    g.add(m); g.add(new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex(0xff0000), blending:THREE.AdditiveBlending})));
+    g.children[1].scale.set(3,3,1);
+    g.position.set(p.x, 1.5, p.z); scene.add(g); anomalies.push({g, m, ...p, alive:true});
   });
 
-  // ==========================================
-  // PLAYER, PHYSICS & MECHANICS
-  // ==========================================
-  const player = { 
-    x:6, z:8, y:0, vy:0, yaw:Math.PI, pitch:0, 
-    eyeHeight:1.6, speed:5, runSpeed:9, radius:0.5, 
-    grounded:true, stamina:100, flashOn:false,
-    bobTimer:0 
-  };
+  // --- GAME LOGIC & MATH PUZZLE ---
+  const CORE_TEMP = 312;
+  const TOTAL_ISO = 5;
+  const SECRET_CODE = ((CORE_TEMP * TOTAL_ISO) - 142).toString(); // "1418"
+
+  const player = { x:6, z:8, y:0, vy:0, yaw:Math.PI, pitch:0, flashOn:false, stamina:100, grounded:true };
+  let gameState = 'menu', phoneOpen=false, calcOpen=false, termOpen=false;
   const keys = {};
-  let gameState = 'menu'; // menu, cinematic, playing, win
-  
-  // UI States
-  let phoneOpen = false, calcOpen = false;
 
-  document.addEventListener('keydown', e=>{ 
-    keys[e.code]=true; 
-    if(gameState==='playing' && !calcOpen){
+  document.addEventListener('keydown', e=>{
+    keys[e.code]=true;
+    if(gameState==='playing' && !calcOpen && !termOpen){
       if(e.code==='KeyF') toggleFlashlight();
       if(e.code==='KeyH') togglePhone();
       if(e.code==='KeyC') toggleCalc();
-      // JUMP MECHANIC
-      if(e.code==='Space' && player.grounded) {
-        player.vy = 6.5; 
-        player.grounded = false;
-      }
+      if(e.code==='Space' && player.grounded){ player.vy=5; player.grounded=false; }
     }
     if(calcOpen) handleCalcKey(e);
+    if(termOpen) handleTermKey(e);
   });
   document.addEventListener('keyup', e=>{ keys[e.code]=false; });
 
-  let pointerLocked = false;
+  let ptrLocked=false;
   document.addEventListener('mousemove', e=>{
-    if(!pointerLocked || gameState!=='playing' || phoneOpen || calcOpen) return;
-    player.yaw -= e.movementX*0.002;
-    player.pitch = Math.max(-1.5, Math.min(1.5, player.pitch - e.movementY*0.002));
+    if(!ptrLocked || gameState!=='playing' || phoneOpen || calcOpen || termOpen) return;
+    player.yaw -= e.movementX*0.002; player.pitch = Math.max(-1.5, Math.min(1.5, player.pitch - e.movementY*0.002));
   });
 
   canvas.addEventListener('click', ()=>{
-    if(gameState==='playing' && !phoneOpen && !calcOpen && !pointerLocked) canvas.requestPointerLock();
-    else if(gameState==='playing' && pointerLocked) interact();
+    if(gameState==='playing' && !phoneOpen && !calcOpen && !termOpen && !ptrLocked) canvas.requestPointerLock();
+    else if(gameState==='playing' && ptrLocked) interact();
   });
-  document.addEventListener('pointerlockchange', ()=> pointerLocked=(document.pointerLockElement===canvas));
+  document.addEventListener('pointerlockchange', ()=> ptrLocked=(document.pointerLockElement===canvas));
 
-  // MECHANIC: SENTER (FLASHLIGHT)
-  function toggleFlashlight(){
-    player.flashOn = !player.flashOn;
-    flashlight.intensity = player.flashOn ? 2 : 0;
-    document.getElementById('keyF').classList.toggle('active', player.flashOn);
+  // --- INTERACTION & CROSSHAIR ---
+  const raycaster = new THREE.Raycaster();
+  function checkHover(){
+    if(!ptrLocked) return;
+    raycaster.setFromCamera({x:0,y:0}, camera);
+    let hit = false;
+    // Check items
+    items.forEach(i=>{ if(i.alive && raycaster.ray.distanceToPoint(i.m.position)<1 && camera.position.distanceTo(i.m.position)<4) hit=true; });
+    // Check anomalies
+    anomalies.forEach(a=>{ if(a.alive && raycaster.ray.distanceToPoint(a.g.position)<1.5 && camera.position.distanceTo(a.g.position)<5) hit=true; });
+    // Check terminal
+    if(raycaster.ray.distanceToPoint(termGroup.position)<2 && camera.position.distanceTo(termGroup.position)<4) hit=true;
+    
+    document.getElementById('crosshair').classList.toggle('active', hit);
   }
 
-  // MECHANIC: SMARTPHONE (HP)
-  function togglePhone(){
-    if(calcOpen) return;
-    phoneOpen = !phoneOpen;
-    document.getElementById('phoneUI').classList.toggle('open', phoneOpen);
-    document.getElementById('keyH').classList.toggle('active', phoneOpen);
-    if(phoneOpen) document.exitPointerLock();
-    else canvas.requestPointerLock();
-  }
-  window.togglePhone = togglePhone;
-  
-  function addPhoneMsg(sender, text, isSys=false){
-    const box = document.createElement('div');
-    box.className = 'msg-box' + (isSys?' sys':'');
-    box.innerHTML = `<div class="msg-sender">${sender}</div>${text}`;
-    const p = document.getElementById('phoneMsgs');
-    p.appendChild(box); p.scrollTop = p.scrollHeight;
-    // Notify player
-    if(!phoneOpen) {
-      document.getElementById('keyH').style.background = 'rgba(0,255,204,0.3)';
-      setTimeout(()=>document.getElementById('keyH').style.background = '', 500);
+  function interact(){
+    let hitAny = false;
+    // Pickup
+    items.forEach(i=>{
+      if(i.alive && raycaster.ray.distanceToPoint(i.m.position)<1 && camera.position.distanceTo(i.m.position)<4){
+        i.alive=false; scene.remove(i.m); missions.m1++; updateUI(); playTone(800,0.1,'square',0.1); toast('Isolator diambil. Sisa: '+(5-missions.m1)); hitAny=true;
+      }
+    });
+    // Kill Anomaly
+    anomalies.forEach(a=>{
+      if(a.alive && raycaster.ray.distanceToPoint(a.g.position)<1.5 && camera.position.distanceTo(a.g.position)<5){
+        a.alive=false; scene.remove(a.g); missions.m2++; updateUI(); playJumpscare(); toast('Anomali hancur.'); hitAny=true;
+      }
+    });
+    // Open Terminal
+    if(!hitAny && raycaster.ray.distanceToPoint(termGroup.position)<2 && camera.position.distanceTo(termGroup.position)<4){
+      if(missions.m1 < 5){ toast('Kumpulkan semua 5 Isolator terlebih dahulu!'); playTone(150,0.3,'sawtooth',0.5); }
+      else toggleTerm();
     }
   }
-  setInterval(()=>{
-    const d = new Date();
-    document.getElementById('phoneTime').innerText = d.getHours().toString().padStart(2,'0')+":"+d.getMinutes().toString().padStart(2,'0');
-  }, 1000);
 
-  // MECHANIC: CALCULATOR
-  let calcExpr = '';
+  // --- MECHANICS ---
+  function toggleFlashlight(){
+    player.flashOn = !player.flashOn; flashlight.intensity = player.flashOn ? 2 : 0;
+    document.getElementById('keyF').classList.toggle('active', player.flashOn); playTone(1000, 0.05, 'square', 0.1);
+  }
+  function togglePhone(){ if(calcOpen||termOpen)return; phoneOpen=!phoneOpen; document.getElementById('phoneUI').classList.toggle('open', phoneOpen); document.getElementById('keyH').classList.toggle('active', phoneOpen); if(phoneOpen)document.exitPointerLock(); else canvas.requestPointerLock(); playTone(600,0.1,'sine',0.2);}
+  window.togglePhone = togglePhone;
+
+  function toast(msg){ const w=document.getElementById('toastWrap'), t=document.createElement('div'); t.className='toast'; t.innerText=msg; w.appendChild(t); setTimeout(()=>t.remove(), 3400); }
+  const missions = { m1:0, m2:0, m3:0 };
+  function updateUI(){
+    ['m1','m2'].forEach(m=>{ document.getElementById(m).querySelector('.count').innerText=missions[m]+(m==='m1'?'/5':'/3'); document.getElementById(m+'bar').style.width=(missions[m]/(m==='m1'?5:3)*100)+'%'; if(missions[m]===(m==='m1'?5:3)) document.getElementById(m).classList.add('done'); });
+  }
+
+  // --- CALCULATOR ---
+  let calcExpr='';
   function handleCalcKey(e){
     if(e.code==='Escape') toggleCalc();
     else if(/^[0-9]$/.test(e.key)) calcP(e.key);
     else if(['.','+','-','*','/','Enter','Backspace'].includes(e.key)){
       let k=e.key; if(k==='*')k='×'; if(k==='/')k='÷'; if(k==='Enter')k='=';
-      if(k==='Backspace'){ calcExpr=calcExpr.slice(0,-1); document.getElementById('calcScreen').innerText=calcExpr||'0'; }
-      else calcP(k);
+      if(k==='Backspace'){ calcExpr=calcExpr.slice(0,-1); document.getElementById('calcScreen').innerText=calcExpr||'0'; } else calcP(k);
     }
   }
   function calcP(k){
+    playTone(500,0.05,'square',0.1);
     if(k==='C') calcExpr='';
-    else if(k==='='){
-      try{ calcExpr = (Math.round(Function('"use strict";return ('+calcExpr.replace(/×/g,'*').replace(/÷/g,'/')+')')()*1e6)/1e6).toString(); }
-      catch(e){ calcExpr='Err'; }
-    } else { if(calcExpr==='Err')calcExpr=''; calcExpr+=k; }
+    else if(k==='='){ try{ calcExpr=(Math.round(Function('"use strict";return ('+calcExpr.replace(/×/g,'*').replace(/÷/g,'/')+')')()*1e6)/1e6).toString(); }catch(e){ calcExpr='Err'; } }
+    else { if(calcExpr==='Err')calcExpr=''; calcExpr+=k; }
     document.getElementById('calcScreen').innerText = calcExpr||'0';
   }
-  function toggleCalc(){
-    if(phoneOpen) return;
-    calcOpen = !calcOpen;
-    document.getElementById('calcModal').classList.toggle('hidden', !calcOpen);
-    document.getElementById('keyC').classList.toggle('active', calcOpen);
-    if(calcOpen) document.exitPointerLock();
-    else canvas.requestPointerLock();
-  }
+  function toggleCalc(){ if(phoneOpen||termOpen)return; calcOpen=!calcOpen; document.getElementById('calcModal').classList.toggle('hidden',!calcOpen); document.getElementById('keyC').classList.toggle('active',calcOpen); if(calcOpen)document.exitPointerLock(); else canvas.requestPointerLock(); }
   window.toggleCalc = toggleCalc;
+  ['7','8','9','÷','4','5','6','×','1','2','3','-','0','.','C','+','='].forEach(k=>{ const b=document.createElement('div'); b.className='calcKey'+(k==='='?' eq':''); b.innerText=k; b.onclick=()=>calcP(k); document.getElementById('calcGrid').appendChild(b); });
 
-  // Build Calc UI
-  ['7','8','9','÷','4','5','6','×','1','2','3','-','0','.','C','+','='].forEach(k=>{
-    const b=document.createElement('div'); b.className='calcKey'+(k==='='?' eq':''); b.innerText=k;
-    b.onclick=()=>calcP(k); document.getElementById('calcGrid').appendChild(b);
-  });
-
-  // UI Updates
-  const missions = { m1:0, m2:0, m3:false };
-  function updateUI(){
-    document.getElementById('m1').querySelector('.count').innerText = missions.m1+'/5';
-    document.getElementById('m1bar').style.width = (missions.m1/5*100)+'%';
-    document.getElementById('m2').querySelector('.count').innerText = missions.m2+'/5';
-    document.getElementById('m2bar').style.width = (missions.m2/5*100)+'%';
-    if(missions.m1===5) document.getElementById('m1').classList.add('done');
-    if(missions.m2===5) document.getElementById('m2').classList.add('done');
-    if(missions.m3) { document.getElementById('m3bar').style.width='100%'; document.getElementById('m3').classList.add('done'); }
+  // --- REACTOR TERMINAL (THE PUZZLE INPUT) ---
+  let termVal = '';
+  function toggleTerm(){ if(phoneOpen||calcOpen)return; termOpen=!termOpen; document.getElementById('termModal').classList.toggle('hidden',!termOpen); if(termOpen){ document.exitPointerLock(); termVal=''; document.getElementById('termScreen').innerText='----'; document.getElementById('termScreen').className=''; } else canvas.requestPointerLock(); }
+  window.toggleTerm = toggleTerm;
+  function handleTermKey(e){ if(e.code==='Escape')toggleTerm(); else if(/^[0-9]$/.test(e.key))termP(e.key); else if(e.key==='Enter')submitTerm(); else if(e.key==='Backspace')termP('C'); }
+  function termP(k){
+    playTone(600,0.05,'square',0.1);
+    if(k==='C') termVal=''; else if(termVal.length<4) termVal+=k;
+    document.getElementById('termScreen').innerText = termVal.padEnd(4,'-');
+    document.getElementById('termScreen').className='';
   }
-  function toast(msg){
-    const w = document.getElementById('toastWrap'), t = document.createElement('div');
-    t.className='toast'; t.innerText=msg; w.appendChild(t); setTimeout(()=>t.remove(), 3400);
+  window.termP = termP;
+  function submitTerm(){
+    if(termVal === SECRET_CODE){
+      termOpen=false; document.getElementById('termModal').classList.add('hidden');
+      winGame();
+    } else {
+      playTone(150,0.4,'sawtooth',0.5);
+      document.getElementById('termScreen').className='error';
+      document.getElementById('termScreen').innerText='GAGAL';
+      setTimeout(()=>{ termVal=''; document.getElementById('termScreen').innerText='----'; document.getElementById('termScreen').className=''; }, 1000);
+    }
   }
+  window.submitTerm = submitTerm;
+  for(let i=1;i<=9;i++){ const b=document.createElement('div'); b.className='calcKey'; b.innerText=i; b.style.color='#0f0'; b.style.borderColor='#0f0'; b.style.background='#010'; b.onclick=()=>termP(i.toString()); document.getElementById('termGrid').appendChild(b); }
+  const b0=document.createElement('div'); b0.className='calcKey'; b0.innerText='0'; b0.style.gridColumn='span 3'; b0.style.color='#0f0'; b0.style.borderColor='#0f0'; b0.style.background='#010'; b0.onclick=()=>termP('0'); document.getElementById('termGrid').appendChild(b0);
 
-  function interact(){
-    const rc = new THREE.Raycaster(); rc.setFromCamera({x:0,y:0}, camera);
-    anomalies.forEach(a=>{
-      if(a.alive && rc.ray.distanceToPoint(a.g.position)<1.5 && camera.position.distanceTo(a.g.position)<5){
-        a.alive=false; scene.remove(a.g); missions.m2++; updateUI();
-        toast('Glitch Dinetralisir ('+missions.m2+'/5)');
-        addPhoneMsg('SYSTEM', `Anomali sektor diredakan. Sisa: ${5-missions.m2}`);
-      }
-    });
+  // --- CINEMATIC ---
+  function startCinematic(){
+    initAudio(); gameState = 'cinematic'; document.getElementById('menu').classList.add('hidden'); document.getElementById('cinematicBars').classList.remove('hidden'); document.getElementById('skipCinematic').style.display='block';
+    const cIn = { x:-12.5, y:1.6, z:-2.8, yaw:Math.PI/2, pitch:0 };
+    camera.position.set(cIn.x, cIn.y, cIn.z); camera.rotation.set(cIn.pitch, cIn.yaw, 0);
+    setTimeout(()=>{
+      if(gameState!=='cinematic')return;
+      const cOut = { x:6, y:1.6, z:8, yaw:Math.PI, pitch:0 };
+      new TWEEN.Tween(cIn).to(cOut, 3000).easing(TWEEN.Easing.Cubic.InOut).onUpdate(()=>{ camera.position.set(cIn.x, cIn.y, cIn.z); camera.rotation.set(cIn.pitch, cIn.yaw, 0); }).onComplete(endCinematic).start();
+    }, 2000);
   }
+  function endCinematic(){
+    if(gameState==='playing')return; TWEEN.removeAll(); gameState = 'playing'; document.getElementById('cinematicBars').classList.remove('cinematic-active'); setTimeout(()=>document.getElementById('cinematicBars').classList.add('hidden'), 1000); document.getElementById('skipCinematic').style.display='none'; document.getElementById('hud').classList.remove('hidden'); document.getElementById('crosshair').classList.add('visible');
+    player.x=6; player.z=8; player.yaw=Math.PI; canvas.requestPointerLock();
+    toast('Sistem menyala. Baca pesan masuk (H).'); playHeartbeat(); setInterval(playHeartbeat, 2000);
+  }
+  document.getElementById('startBtn').onclick = startCinematic;
+  document.getElementById('skipCinematic').onclick = endCinematic;
 
+  // --- COLLISION ---
   function tryMove(nx,nz){
-    if(nx>ROOM_X-0.5 || nx<-ROOM_X+0.5 || nz>ROOM_Z-0.5 || nz<-ROOM_Z+0.5) { if(!(nx>=-12.5 && nx<=-9.5 && nz<-10)) return false; }
-    for(const o of obstacles) { if(Math.hypot(nx-o.x, nz-o.z) < o.r+player.radius) return false; }
+    if(nx>15 || nx<-15 || nz>10 || nz<-10) { if(!(nx>=-12.5 && nx<=-9.5 && nz<-10)) return false; }
+    for(const o of obstacles) { if(Math.hypot(nx-o.x, nz-o.z) < o.r+0.5) return false; }
     return true;
   }
 
-  // ==========================================
-  // CINEMATIC SEQUENCE
-  // ==========================================
-  function startCinematic(){
-    gameState = 'cinematic';
-    document.getElementById('menu').classList.add('hidden');
-    document.getElementById('cinematicBars').classList.remove('hidden');
-    document.getElementById('skipCinematic').style.display='block';
-    
-    // Position camera right in front of monitor
-    const camIntro = { x:-12.5, y:1.6, z:-2.8, yaw:Math.PI/2, pitch:0 };
-    camera.position.set(camIntro.x, camIntro.y, camIntro.z);
-    camera.rotation.set(camIntro.pitch, camIntro.yaw, 0);
-
-    // Type text effect
-    let typing = setInterval(()=>{
-      if(typeIndex < fullText.length){
-        monitorText += fullText[typeIndex]; typeIndex++; drawMonitorText();
-        monLight.intensity = 0.5 + Math.random()*0.5; // Flicker
-      } else {
-        clearInterval(typing);
-        monLight.intensity = 1.0;
-        // Wait 1s, then pan back
-        setTimeout(()=>{
-          if(gameState!=='cinematic') return;
-          const camEnd = { x:6, y:player.eyeHeight, z:8, yaw:Math.PI, pitch:0 };
-          new TWEEN.Tween(camIntro).to(camEnd, 3000).easing(TWEEN.Easing.Cubic.InOut)
-            .onUpdate(()=>{ camera.position.set(camIntro.x, camIntro.y, camIntro.z); camera.rotation.set(camIntro.pitch, camIntro.yaw, 0); })
-            .onComplete(endCinematic).start();
-        }, 1000);
-      }
-    }, 50);
+  // --- ENDINGS ---
+  function winGame(){
+    gameState='win';
+    rCore.material.color.setHex(0x00ff00); rCore.material.emissive.setHex(0x00ff00); rLight.color.setHex(0x00ff00);
+    document.getElementById('m3bar').style.width='100%'; document.getElementById('m3').classList.add('done');
+    playTone(400,1,'sine',0.5); toast('KODE DITERIMA. REAKTOR STABIL.');
+    setTimeout(()=>{ document.exitPointerLock(); document.getElementById('endTitle').innerText='BERHASIL SELAMAT'; document.getElementById('endTitle').style.color='#0f0'; document.getElementById('endTitle').style.textShadow='0 0 20px #0f0'; document.getElementById('endSub').innerText='Kamu telah mensimulasikan protokol keamanan dengan benar.'; document.getElementById('endscreen').classList.remove('hidden'); }, 3000);
+  }
+  function loseGame(){
+    gameState='lose'; document.exitPointerLock(); document.getElementById('glitchOverlay').style.opacity=1; document.getElementById('glitchOverlay').style.background='red';
+    playJumpscare();
+    setTimeout(()=>{ document.getElementById('endscreen').classList.remove('hidden'); }, 1000);
   }
 
-  function endCinematic(){
-    if(gameState==='playing') return;
-    TWEEN.removeAll(); gameState = 'playing';
-    document.getElementById('cinematicBars').classList.remove('cinematic-active');
-    setTimeout(()=>document.getElementById('cinematicBars').classList.add('hidden'), 1000);
-    document.getElementById('skipCinematic').style.display='none';
-    document.getElementById('hud').classList.remove('hidden');
-    document.getElementById('crosshair').classList.add('visible');
-    
-    player.x=6; player.z=8; player.yaw=Math.PI;
-    canvas.requestPointerLock();
-    addPhoneMsg('HQ COMMAND', 'Kami mendeteksi sinyalmu. Ambil isolator dan perbaiki reaktor secepatnya!');
-  }
-  document.getElementById('skipCinematic').onclick = endCinematic;
-  document.getElementById('startBtn').onclick = startCinematic;
-
-  // ==========================================
-  // MAIN LOOP
-  // ==========================================
+  // --- MAIN LOOP ---
   const clock = new THREE.Clock(); let tTimer=0;
 
   function animate(time){
-    requestAnimationFrame(animate);
-    TWEEN.update(time);
+    requestAnimationFrame(animate); TWEEN.update(time);
     const dt = Math.min(0.05, clock.getDelta()), t = clock.elapsedTime;
 
-    // Weather
-    const p = rainGeo.attributes.position.array;
-    for(let i=0; i<rainCount; i++){ p[i*3+1] -= 15*dt; if(p[i*3+1]< -5) p[i*3+1]=20; }
-    rainGeo.attributes.position.needsUpdate = true;
-    
+    // Horror Weather & Light Flicker
     tTimer -= dt;
-    if(tTimer<=0){
-      if(Math.random()<0.1){ lightning.intensity=5; setTimeout(()=>lightning.intensity=0, 100); }
-      tTimer = rand(2,8);
-    }
+    if(tTimer<=0){ if(Math.random()<0.3){ lightning.intensity=3; setTimeout(()=>lightning.intensity=0, 100); playThunder(); } tTimer = rand(3,8); }
+    if(player.flashOn && Math.random()<0.02) flashlight.intensity = rand(0.5, 2.5); // Flicker
 
-    // Core Animation
-    coreRef.mesh.rotation.x += dt*0.5; coreRef.mesh.rotation.y += dt*0.8;
-    coreRef.rings.forEach(r=> r.m.rotateOnAxis(r.ax, dt*r.s));
+    // Animations
+    rCore.rotation.x += dt; rCore.rotation.y += dt*2;
+    items.forEach(i=>{ if(i.alive){ i.m.rotation.x+=dt; i.m.rotation.y+=dt*2; i.m.position.y=1+Math.sin(t*4+i.x)*0.2; } });
+    
+    if(gameState==='playing'){
+      checkHover(); // Update crosshair
 
-    if(gameState==='playing' && !phoneOpen && !calcOpen){
-      // PHYSICS & MOVEMENT
-      const fw = new THREE.Vector3(Math.sin(player.yaw),0,Math.cos(player.yaw));
-      const rt = new THREE.Vector3(Math.sin(player.yaw+Math.PI/2),0,Math.cos(player.yaw+Math.PI/2));
-      let mx=0, mz=0;
-      if(keys['KeyW']){ mx-=fw.x; mz-=fw.z; }
-      if(keys['KeyS']){ mx+=fw.x; mz+=fw.z; }
-      if(keys['KeyA']){ mx-=rt.x; mz-=rt.z; }
-      if(keys['KeyD']){ mx+=rt.x; mz+=rt.z; }
-      
-      const isMoving = (mx!==0 || mz!==0);
-      const isRunning = isMoving && keys['ShiftLeft'] && player.stamina > 0;
-      
-      // STAMINA DRAIN/REGEN
-      if(isRunning) player.stamina = Math.max(0, player.stamina - 25*dt);
-      else player.stamina = Math.min(100, player.stamina + 15*dt);
-      
-      // Update UI Stamina
-      const sFill = document.getElementById('staminaFill');
-      sFill.style.width = player.stamina + '%';
-      sFill.style.background = player.stamina < 20 ? 'var(--danger)' : 'linear-gradient(90deg, #ffcc00, #ff6600)';
-
-      const spd = isRunning ? player.runSpeed : player.speed;
-      const len = Math.hypot(mx,mz); if(len>0){ mx/=len; mz/=len; }
-      
-      const nx = player.x + mx*spd*dt;
-      const nz = player.z + mz*spd*dt;
-      if(tryMove(nx, player.z)) player.x = nx;
-      if(tryMove(player.x, nz)) player.z = nz;
-
-      // JUMP GRAVITY
-      player.vy -= 20 * dt; // Gravity pull
-      player.y += player.vy * dt;
-      if(player.y <= 0){ player.y = 0; player.vy = 0; player.grounded = true; }
-
-      // HEAD BOBBING (only on ground)
-      let bob = 0;
-      if(player.grounded && isMoving){
-        player.bobTimer += dt * (isRunning ? 12 : 8);
-        bob = Math.sin(player.bobTimer) * (isRunning ? 0.08 : 0.04);
-      } else {
-        player.bobTimer = 0;
-      }
-
-      // SET CAMERA
-      camera.position.set(player.x, player.y + player.eyeHeight + bob, player.z);
-      camera.rotation.set(player.pitch, player.yaw, 0);
-
-      // ITEM LOGIC
-      components.forEach(c=>{
-        if(!c.alive) return;
-        c.m.rotation.y += dt*2; c.g.position.y = 1.2 + Math.sin(t*3+c.x)*0.2;
-        if(Math.hypot(player.x-c.x, player.z-c.z)<1.5){
-          c.alive=false; scene.remove(c.g); missions.m1++; updateUI();
-          toast('Isolator Diambil ('+missions.m1+'/5)');
+      // Anomaly Logic (Chasing & Damaging)
+      anomalies.forEach(a=>{
+        if(a.alive){
+          a.m.rotation.x+=dt*3; a.m.rotation.y+=dt*4;
+          // Move towards player slowly
+          const dx=player.x-a.x, dz=player.z-a.z, dist=Math.hypot(dx,dz);
+          if(dist < 8){
+            a.x += (dx/dist)*dt*1.0; a.z += (dz/dist)*dt*1.0;
+            if(dist < 2.5){ 
+              player.stamina -= 30*dt; 
+              document.getElementById('glitchOverlay').style.opacity = Math.random()*0.5; // Glitch screen
+              playTone(150,0.1,'sawtooth',0.2);
+            }
+          }
+          a.g.position.set(a.x, 1.5+Math.sin(t*5+a.x)*0.5, a.z);
         }
       });
+      if(player.stamina > 0 && Math.random()<0.1) document.getElementById('glitchOverlay').style.opacity=0;
 
-      anomalies.forEach(a=>{ if(a.alive){ a.m.rotation.x+=dt*2; a.m.rotation.y+=dt*3; a.m.position.set(rand(-0.05,0.05),rand(-0.05,0.05),rand(-0.05,0.05)); } });
+      if(!phoneOpen && !calcOpen && !termOpen){
+        // Movement
+        const fw = new THREE.Vector3(Math.sin(player.yaw),0,Math.cos(player.yaw));
+        const rt = new THREE.Vector3(Math.sin(player.yaw+Math.PI/2),0,Math.cos(player.yaw+Math.PI/2));
+        let mx=0, mz=0;
+        if(keys['KeyW']){ mx-=fw.x; mz-=fw.z; } if(keys['KeyS']){ mx+=fw.x; mz+=fw.z; }
+        if(keys['KeyA']){ mx-=rt.x; mz-=rt.z; } if(keys['KeyD']){ mx+=rt.x; mz+=rt.z; }
+        
+        const isRun = (mx||mz) && keys['ShiftLeft'] && player.stamina>0;
+        if(isRun) player.stamina = Math.max(0, player.stamina-15*dt);
+        else player.stamina = Math.min(100, player.stamina+5*dt); // Slow regen
 
-      // WIN CONDITION
-      if(!missions.m3 && Math.hypot(player.x-devP.x, player.z-devP.z)<3.5 && missions.m1===5 && missions.m2===5){
-        missions.m3=true; updateUI();
-        coreRef.mesh.material.color.setHex(0x00ffcc); coreRef.mesh.material.emissive.setHex(0x00ffcc); coreRef.light.color.setHex(0x00ffcc);
-        addPhoneMsg('SYSTEM', 'REAKTOR STABIL. Misi Selesai.', true);
-        setTimeout(()=>{ document.exitPointerLock(); gameState='win'; document.getElementById('winscreen').classList.remove('hidden'); }, 2000);
+        const sFill = document.getElementById('staminaFill');
+        sFill.style.width = player.stamina+'%';
+        if(player.stamina<=0) loseGame(); // Death by exhaustion / anomaly
+
+        const len=Math.hypot(mx,mz); if(len>0){ mx/=len; mz/=len; }
+        const spd = isRun ? 9 : 4;
+        const nx = player.x + mx*spd*dt, nz = player.z + mz*spd*dt;
+        if(tryMove(nx, player.z)) player.x=nx;
+        if(tryMove(player.x, nz)) player.z=nz;
+
+        player.vy -= 20*dt; player.y += player.vy*dt;
+        if(player.y<=0){ player.y=0; player.vy=0; player.grounded=true; }
+
+        let bob = (player.grounded && (mx||mz)) ? Math.sin(t*(isRun?15:10))*(isRun?0.1:0.05) : 0;
+        camera.position.set(player.x, player.y+1.6+bob, player.z);
+        camera.rotation.set(player.pitch, player.yaw, 0);
       }
     }
     renderer.render(scene, camera);
   }
-
   window.addEventListener('resize', ()=>{ camera.aspect=window.innerWidth/window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight); });
   animate();
 })();
